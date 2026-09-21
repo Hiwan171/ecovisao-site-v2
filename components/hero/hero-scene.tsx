@@ -1,21 +1,19 @@
 "use client";
 
 import { useGLTF } from "@react-three/drei";
-import { Canvas, useFrame, useThree } from "@react-three/fiber";
-import { useEffect, useMemo, useRef } from "react";
+import { Canvas, useThree } from "@react-three/fiber";
+import { useEffect, useMemo } from "react";
 import * as THREE from "three";
-import { buildRootGeometry, measureTreeBase } from "./tree-roots";
+
+/** Where the crown sits in the canvas, as fractions of its width and height. */
+export type CrownPosition = { x: number; y: number };
 
 type HeroSceneProps = {
   active: boolean;
-  reducedMotion: boolean;
-  /** True once the loader has handed off, which is what starts the camera rise. */
-  revealed: boolean;
   onReady: () => void;
   onUnavailable: () => void;
+  onFraming: (crown: CrownPosition) => void;
 };
-
-type TreeProps = Pick<HeroSceneProps, "reducedMotion" | "onReady">;
 
 const TREE_PATH = "/models/ecovisao-tree.glb";
 
@@ -23,29 +21,10 @@ const CAMERA_DISTANCE = 7.2;
 const CAMERA_FOV = 31;
 const CAMERA_Y = 0.2;
 
+/** Fixed yaw, so the crown is a little off-axis instead of dead flat. */
+const TREE_YAW = -0.07;
+
 const HALF_FOV_TANGENT = Math.tan(THREE.MathUtils.degToRad(CAMERA_FOV) / 2);
-
-/**
- * Three camera poses drive the whole shot.
- *
- * `ENTRANCE` sits low and close, framing the bole: the first thing the page
- * shows is the root end. It rises to `REST` — the pose every framing constant
- * below is measured against — over ENTRANCE_MS. Scrolling then carries it on to
- * `SCROLLED`, where the crown fills the frame. Root, structure, growth.
- */
-const CAMERA_REST = { y: CAMERA_Y, z: CAMERA_DISTANCE };
-const ENTRANCE_MS = 2600;
-
-/**
- * Beat held at the low pose before the climb starts. Without it the camera is
- * already rising while the tree is still fading in, and the roots — the whole
- * point of starting down there — are gone before they are legible.
- */
-const ENTRANCE_HOLD_MS = 850;
-
-function easeInOutCubic(t: number) {
-  return t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2;
-}
 
 /**
  * Half of the world-space height the camera sees `depth` units in front of the
@@ -58,8 +37,17 @@ function viewHalfHeightAt(depth: number) {
 }
 
 /**
+ * Where the visual mass of the crown sits, used to hand its screen position to
+ * whatever wants to grow out of it. Three quarters of the way up the tree, and a
+ * little in front of the trunk's axis because the near leaves carry the weight.
+ */
+const CROWN_HEIGHT_FRACTION = 0.75;
+const CROWN_DEPTH = 0.5;
+
+/**
  * Framing per breakpoint. `height` is the tree's world height, `headroom` the
- * gap left above the crown, and the offsets bound how far right the tree parks.
+ * gap left above the crown, and the offsets bound how far right the tree parks:
+ * as far as the viewport allows, in the space beside the copy.
  */
 const DESKTOP_FRAME = {
   height: 4.15,
@@ -67,44 +55,116 @@ const DESKTOP_FRAME = {
   edgeMargin: 0.18,
   minOffsetX: 0.5,
   maxOffsetX: 1.85,
-  entrance: { y: -1.85, z: 6.5 },
-  scrolled: { y: 1.05, z: 5.2 },
 };
 
-// A phone frames the tree much lower, so it needs a shallower entrance: the
-// desktop one would swing the canopy straight up behind the headline.
+// A phone has no room beside the copy, so the tree sits under it instead.
 const MOBILE_FRAME = {
   height: 3.1,
   headroom: 2.04,
   edgeMargin: 0.05,
   minOffsetX: -0.06,
   maxOffsetX: 0.5,
-  entrance: { y: -0.6, z: 7 },
-  scrolled: { y: 0.72, z: 6.05 },
 };
 
 // The GLB ships with its palette baked into baseColorFactor, which renders as a
 // generic nursery green. Re-grading the four materials keeps the tree inside the
-// brand range and matte enough to read as a sculpture rather than a stock asset.
+// brand range. Roughness stays low enough for the lights to leave specular
+// highlights on the leaves — fully matte reads as flat, not as a 3D object.
 const MATERIAL_GRADE: Record<
   string,
-  { color: string; roughness: number; emissive?: string; emissiveIntensity?: number }
+  {
+    color: string;
+    roughness: number;
+    sheen?: string;
+    emissive?: string;
+    emissiveIntensity?: number;
+  }
 > = {
-  "Bark — Forest Umber": { color: "#33200f", roughness: 0.97 },
-  "Leaves — Deep Forest": { color: "#0a2d18", roughness: 1 },
-  "Leaves — Ecovisao": { color: "#19542e", roughness: 0.99 },
+  "Bark — Forest Umber": { color: "#3b2513", roughness: 0.8 },
+  "Leaves — Deep Forest": { color: "#0e3d20", roughness: 0.62, sheen: "#5fae55" },
+  "Leaves — Ecovisao": { color: "#1f6b3a", roughness: 0.58, sheen: "#7cc45a" },
   "Leaves — New Growth": {
-    color: "#4d8a3a",
-    roughness: 0.97,
+    color: "#5aa63f",
+    roughness: 0.54,
+    sheen: "#b5ec6d",
     emissive: "#7ecf43",
-    emissiveIntensity: 0.04,
+    emissiveIntensity: 0.05,
   },
 };
 
-function Tree({ reducedMotion, onReady }: TreeProps) {
+/**
+ * Wind, done in the vertex shader so 170k leaf vertices cost nothing on the CPU.
+ * The model is a single mesh with an identity transform, so `position` is in the
+ * model's own units: the trunk starts at y = 0 and the crown spans y ≈ 2.5–5.
+ *
+ * Two layers. A slow gust bends the whole crown, weighted by height so the trunk
+ * stays put; it is a smooth function of position, so bark and the leaves on it
+ * move together and nothing detaches. On top, a faster flutter whose phase is
+ * hashed from position, so neighbouring leaves are never in step.
+ */
+const WIND_GLSL = /* glsl */ `
+  float crown = smoothstep(2.3, 5.0, position.y);
+  crown *= crown;
+
+  float gust = sin(uTime * 0.9 + position.x * 1.1 + position.z * 0.8) * 0.6
+             + sin(uTime * 0.55 + position.z * 1.7 - position.y * 0.7) * 0.4;
+  transformed.x += gust * 0.07 * crown;
+  transformed.z += sin(uTime * 0.7 + position.x * 0.9) * 0.035 * crown;
+  transformed.y -= abs(gust) * 0.012 * crown;
+
+  vec3 flutter = vec3(
+    sin(uTime * 2.6 + dot(position, vec3(5.1, 4.3, 4.7))),
+    sin(uTime * 3.1 + dot(position, vec3(3.7, 6.3, 3.9))),
+    sin(uTime * 2.2 + dot(position, vec3(4.3, 3.1, 6.7)))
+  );
+  transformed += flutter * uFlutter * (0.35 + 0.65 * crown);
+`;
+
+/**
+ * Volume for the canopy. The leaves are flat cards with no baked occlusion, so a
+ * lit crown reads as one even lime. Darken what would sit in shade — leaves deep
+ * inside the crown and underneath it — and let the outer, upper ones keep the
+ * full colour. Uses the rest position, so the shading stays put as leaves move.
+ */
+const SHADE_GLSL = /* glsl */ `
+  float inner = smoothstep(0.2, 1.05, length(vRest - vec3(0.0, 3.75, 0.0)) / 1.75);
+  float low = smoothstep(2.5, 4.7, vRest.y);
+  diffuseColor.rgb *= mix(1.0, mix(0.36, 1.08, inner) * mix(0.72, 1.06, low), uShade);
+`;
+
+/** `flutter` is the leaf jitter amplitude; `shade` is 1 for leaves, 0 for bark. */
+function applyTreeShader(material: THREE.Material, flutter: number, shade: number) {
+  material.onBeforeCompile = (shader) => {
+    // A getter, so three re-reads the clock on every draw and nothing has to push
+    // the time in from JS each frame.
+    shader.uniforms.uTime = {
+      get value() {
+        return performance.now() / 1000;
+      },
+    };
+    shader.uniforms.uFlutter = { value: flutter };
+    shader.uniforms.uShade = { value: shade };
+
+    shader.vertexShader = shader.vertexShader
+      .replace(
+        "#include <common>",
+        "#include <common>\nuniform float uTime;\nuniform float uFlutter;\nvarying vec3 vRest;",
+      )
+      .replace("#include <begin_vertex>", `#include <begin_vertex>\nvRest = position;\n${WIND_GLSL}`);
+
+    shader.fragmentShader = shader.fragmentShader
+      .replace(
+        "#include <common>",
+        "#include <common>\nuniform float uShade;\nvarying vec3 vRest;",
+      )
+      .replace("#include <color_fragment>", `#include <color_fragment>\n${SHADE_GLSL}`);
+  };
+  // Every material shares one patched program; the amounts are uniforms.
+  material.customProgramCacheKey = () => "ecovisao-tree";
+}
+
+function Tree({ onReady, onFraming }: Pick<HeroSceneProps, "onReady" | "onFraming">) {
   const source = useGLTF(TREE_PATH, "/draco/");
-  const groupRef = useRef<THREE.Group>(null);
-  const pointerRef = useRef({ x: 0, y: 0 });
   const size = useThree((state) => state.size);
   const isMobile = size.width < 768;
   const aspect = size.width / Math.max(size.height, 1);
@@ -133,35 +193,21 @@ function Tree({ reducedMotion, onReady }: TreeProps) {
             material.emissive.set(grade.emissive);
             material.emissiveIntensity = grade.emissiveIntensity ?? 0.05;
           }
+          if (grade.sheen && material instanceof THREE.MeshPhysicalMaterial) {
+            material.sheen = 0.4;
+            material.sheenColor.set(grade.sheen);
+            material.sheenRoughness = 0.45;
+          }
         } else {
           material.roughness = Math.max(material.roughness, 0.85);
         }
 
         material.metalness = 0;
+        const isLeaf = material.name.startsWith("Leaves");
+        applyTreeShader(material, isLeaf ? 0.017 : 0, isLeaf ? 1 : 0);
         material.needsUpdate = true;
       });
     });
-
-    // Roots are generated in the model's own units and parented to the clone, so
-    // they inherit the framing transform and never influence the bounds the
-    // framing was measured from. Phones never see the base, so they never pay
-    // for the geometry.
-    if (!isMobile) {
-      const { center: baseCenter, radius: baseRadius, height } = measureTreeBase(clone);
-      // Almost silhouette on purpose. Lit like the bole, the near-horizontal
-      // faces catch the green sky term and read as a skirt; kept this dark, only
-      // the lime rim survives — a bright line along each root.
-      const roots = new THREE.Mesh(
-        buildRootGeometry(baseCenter, baseRadius, height),
-        new THREE.MeshStandardMaterial({
-          color: "#241607",
-          roughness: 1,
-          metalness: 0,
-        }),
-      );
-      roots.name = "Ecovisao_Roots";
-      clone.add(roots);
-    }
 
     clone.scale.setScalar(scale);
     clone.position.set(-center.x * scale, -bounds.min.y * scale, -center.z * scale);
@@ -190,6 +236,17 @@ function Tree({ reducedMotion, onReady }: TreeProps) {
   }, [aspect, isMobile, treeHalfDepth, treeHalfWidth]);
 
   useEffect(() => {
+    const frame = isMobile ? MOBILE_FRAME : DESKTOP_FRAME;
+    const halfHeight = viewHalfHeightAt(CROWN_DEPTH);
+    const crownY = offsetY + CROWN_HEIGHT_FRACTION * frame.height;
+
+    onFraming({
+      x: 0.5 + offsetX / (2 * halfHeight * aspect),
+      y: 0.5 - (crownY - CAMERA_Y) / (2 * halfHeight),
+    });
+  }, [aspect, isMobile, offsetX, offsetY, onFraming]);
+
+  useEffect(() => {
     let secondFrame = 0;
     const firstFrame = window.requestAnimationFrame(() => {
       secondFrame = window.requestAnimationFrame(onReady);
@@ -201,169 +258,55 @@ function Tree({ reducedMotion, onReady }: TreeProps) {
     };
   }, [tree, onReady]);
 
-  useEffect(() => {
-    if (reducedMotion || isMobile) return;
-
-    const updatePointer = (event: PointerEvent) => {
-      pointerRef.current.x = (event.clientX / Math.max(window.innerWidth, 1)) * 2 - 1;
-      pointerRef.current.y = -(event.clientY / Math.max(window.innerHeight, 1)) * 2 + 1;
-    };
-
-    window.addEventListener("pointermove", updatePointer, { passive: true });
-    return () => window.removeEventListener("pointermove", updatePointer);
-  }, [isMobile, reducedMotion]);
-
-  useFrame((state, delta) => {
-    const group = groupRef.current;
-    if (!group) return;
-
-    // Scroll is the camera's job now; the tree only answers the pointer and sways.
-    const targetX = reducedMotion || isMobile ? 0 : pointerRef.current.y * 0.03;
-    const targetY = reducedMotion || isMobile ? -0.07 : pointerRef.current.x * 0.042 - 0.07;
-    const damping = 1 - Math.exp(-delta * 2.8);
-
-    group.rotation.x = THREE.MathUtils.lerp(group.rotation.x, targetX, damping);
-    group.rotation.y = THREE.MathUtils.lerp(group.rotation.y, targetY, damping);
-    group.position.y = THREE.MathUtils.lerp(group.position.y, offsetY, damping);
-    group.position.x = THREE.MathUtils.lerp(group.position.x, offsetX, damping);
-
-    if (!reducedMotion && !isMobile) {
-      // Two slow frequencies so the sway never lands on an obvious loop.
-      const t = state.clock.elapsedTime;
-      group.rotation.z = Math.sin(t * 0.34) * 0.0055 + Math.sin(t * 0.71 + 1.3) * 0.0022;
-    }
-  });
-
   return (
-    <group ref={groupRef} position={[offsetX, offsetY, 0]} rotation={[0, -0.07, 0]}>
+    <group position={[offsetX, offsetY, 0]} rotation={[0, TREE_YAW, 0]}>
       <primitive object={tree} />
     </group>
   );
 }
 
 /**
- * Owns every camera move: the timed rise out of ENTRANCE after the loader hands
- * off, and the scroll-linked climb into the canopy. Scroll is read, never
- * hijacked — the page keeps its own scrolling.
+ * Renders continuously while the hero is on screen, because the leaves never
+ * stop moving, and stops entirely once it scrolls away. The pixel ratio is
+ * capped lower on phones, where fill rate is the constraint.
  */
-function CameraRig({
-  active,
-  revealed,
-  reducedMotion,
-}: Pick<HeroSceneProps, "active" | "revealed" | "reducedMotion">) {
-  const invalidate = useThree((state) => state.invalidate);
+function RenderPolicy({ active }: Pick<HeroSceneProps, "active">) {
   const width = useThree((state) => state.size.width);
-  const frame = width < 768 ? MOBILE_FRAME : DESKTOP_FRAME;
-  const revealedAt = useRef<number | null>(null);
-  const scrollRef = useRef(0);
-
-  useEffect(() => {
-    if (revealed && revealedAt.current === null) {
-      revealedAt.current = performance.now();
-      invalidate();
-    }
-  }, [invalidate, revealed]);
-
-  useEffect(() => {
-    const readScroll = () => {
-      scrollRef.current = Math.min(window.scrollY / Math.max(window.innerHeight, 1), 1);
-    };
-
-    readScroll();
-    window.addEventListener("scroll", readScroll, { passive: true });
-    return () => window.removeEventListener("scroll", readScroll);
-  }, []);
-
-  useFrame((state, delta) => {
-    if (!active) return;
-
-    const { camera } = state;
-
-    const startedAt = revealedAt.current;
-    const entrance =
-      reducedMotion || startedAt === null
-        ? Number(reducedMotion)
-        : easeInOutCubic(
-            THREE.MathUtils.clamp(
-              (performance.now() - startedAt - ENTRANCE_HOLD_MS) / ENTRANCE_MS,
-              0,
-              1,
-            ),
-          );
-
-    const scroll = reducedMotion ? 0 : scrollRef.current;
-
-    const baseY = THREE.MathUtils.lerp(frame.entrance.y, CAMERA_REST.y, entrance);
-    const baseZ = THREE.MathUtils.lerp(frame.entrance.z, CAMERA_REST.z, entrance);
-    const targetY = THREE.MathUtils.lerp(baseY, frame.scrolled.y, scroll);
-    const targetZ = THREE.MathUtils.lerp(baseZ, frame.scrolled.z, scroll);
-
-    const damping = 1 - Math.exp(-delta * 5.2);
-    camera.position.y = THREE.MathUtils.lerp(camera.position.y, targetY, damping);
-    camera.position.z = THREE.MathUtils.lerp(camera.position.z, targetZ, damping);
-
-    // R3F aims the camera at the origin when it is created. Born low, it would
-    // keep that upward tilt for the whole move and every framing constant here
-    // assumes a level camera, so this is a pure crane: translate, never pitch.
-    camera.rotation.set(0, 0, 0);
-
-    // In demand mode nothing else asks for the next frame, so drive the rise
-    // until both the entrance and the damping have actually settled.
-    const settled =
-      entrance >= 1 &&
-      Math.abs(camera.position.y - targetY) < 0.001 &&
-      Math.abs(camera.position.z - targetZ) < 0.001;
-    if (!settled) state.invalidate();
-  });
-
-  return null;
-}
-
-function RenderPolicy({ active, reducedMotion }: Pick<HeroSceneProps, "active" | "reducedMotion">) {
-  const width = useThree((state) => state.size.width);
-  const invalidate = useThree((state) => state.invalidate);
   const setFrameloop = useThree((state) => state.setFrameloop);
-  const useDemand = reducedMotion || width < 768;
+  const setDpr = useThree((state) => state.setDpr);
 
   useEffect(() => {
-    setFrameloop(active ? (useDemand ? "demand" : "always") : "never");
-    if (active) invalidate();
-  }, [active, invalidate, setFrameloop, useDemand]);
+    setFrameloop(active ? "always" : "never");
+  }, [active, setFrameloop]);
 
   useEffect(() => {
-    if (!active || !useDemand) return;
-
-    const renderNextFrame = () => invalidate();
-    window.addEventListener("scroll", renderNextFrame, { passive: true });
-    return () => window.removeEventListener("scroll", renderNextFrame);
-  }, [active, invalidate, useDemand]);
+    setDpr(Math.min(window.devicePixelRatio, width < 768 ? 1.5 : 2));
+  }, [setDpr, width]);
 
   return null;
 }
 
-export function HeroScene({
-  active,
-  reducedMotion,
-  revealed,
-  onReady,
-  onUnavailable,
-}: HeroSceneProps) {
+export function HeroScene({ active, onReady, onUnavailable, onFraming }: HeroSceneProps) {
   return (
     <Canvas
       className="hero-scene"
       aria-hidden="true"
+      // An explicit rotation stops R3F from aiming the camera at the origin,
+      // which would tilt it down; every framing constant here assumes it level.
       camera={{
-        position: [0, DESKTOP_FRAME.entrance.y, DESKTOP_FRAME.entrance.z],
+        position: [0, CAMERA_Y, CAMERA_DISTANCE],
+        rotation: [0, 0, 0],
         fov: CAMERA_FOV,
         near: 0.1,
         far: 100,
       }}
-      dpr={[1, 1.5]}
+      dpr={[1, 2]}
       frameloop="always"
       gl={{ alpha: true, antialias: true, powerPreference: "high-performance" }}
       onCreated={({ gl }) => {
-        gl.toneMapping = THREE.ACESFilmicToneMapping;
-        gl.toneMappingExposure = 1.04;
+        // Neutral keeps the leaf greens saturated; ACES pulls them towards grey.
+        gl.toneMapping = THREE.NeutralToneMapping;
+        gl.toneMappingExposure = 1.05;
         gl.outputColorSpace = THREE.SRGBColorSpace;
 
         gl.domElement.addEventListener(
@@ -386,9 +329,8 @@ export function HeroScene({
       {/* Cool bounce so the shaded half reads forest green instead of black. */}
       <directionalLight color="#2f6b45" intensity={0.9} position={[-3, -2.5, 2]} />
       <pointLight color="#ffa013" intensity={0.5} position={[1.2, -1.6, 2.8]} distance={8} />
-      <RenderPolicy active={active} reducedMotion={reducedMotion} />
-      <CameraRig active={active} revealed={revealed} reducedMotion={reducedMotion} />
-      <Tree reducedMotion={reducedMotion} onReady={onReady} />
+      <RenderPolicy active={active} />
+      <Tree onReady={onReady} onFraming={onFraming} />
     </Canvas>
   );
 }

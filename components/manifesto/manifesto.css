@@ -1,0 +1,546 @@
+/*
+ * Section 02: the wipe out of the tree, then Eco → alinhamento → Visão.
+ * Everything animated here is driven from manifesto-engine.ts, so most rules are
+ * only the resting look. Inline styles from the engine override them on scroll.
+ */
+
+.manifesto {
+  position: absolute;
+  z-index: 20;
+  inset: 0;
+  overflow: clip;
+  color: var(--forest-950);
+  /* Paper grain, the counterpart of the film grain on the forest hero. */
+  background-color: var(--cream);
+  background-image: var(--paper-grain);
+  background-blend-mode: multiply;
+  /* Fully hidden until the engine takes over; the wipe grows from the crown. */
+  clip-path: circle(0px at 74% 46%);
+}
+
+.manifesto-front {
+  position: absolute;
+  z-index: 21;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.manifesto-front circle {
+  fill: none;
+  stroke: var(--orange);
+  stroke-width: 1.6;
+  opacity: 0;
+}
+
+/* The frame is the visible viewport. Inside a stage taller than the screen it
+   hugs the bottom, which is the part the pin keeps on screen. */
+.manifesto__frame {
+  position: absolute;
+  inset: auto 0 0;
+  height: min(100svh, 100%);
+}
+
+.manifesto .site-header {
+  z-index: 5;
+}
+
+.site-header--ink .site-header__descriptor {
+  color: rgba(7, 26, 16, 0.5);
+}
+
+.site-header--ink .site-header__nav > a:not(.header-cta) {
+  color: rgba(7, 26, 16, 0.72);
+}
+
+.site-header--ink .site-header__nav > a:not(.header-cta)::after {
+  background: var(--forest-950);
+}
+
+.site-header--ink .header-cta {
+  border-color: rgba(7, 26, 16, 0.2);
+}
+
+.site-header--ink .header-cta span {
+  background: var(--forest-950);
+  color: var(--cream);
+}
+
+.site-header--ink .header-cta:hover {
+  border-color: rgba(7, 26, 16, 0.42);
+  background: rgba(7, 26, 16, 0.05);
+}
+
+/* ---- Figure ------------------------------------------------------------- */
+
+.manifesto__figure {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.m-ring {
+  fill: none;
+  stroke: rgba(18, 73, 36, 0.34);
+  stroke-width: 1;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+}
+
+.m-ring--echo {
+  stroke: rgba(18, 73, 36, 0.15);
+}
+
+/* Ticks are a very short dash on a thick stroke, which reads as a dial. */
+.m-ring[data-ticks] {
+  stroke-width: 9;
+  stroke: rgba(18, 73, 36, 0.4);
+}
+
+.m-ring--echo[data-ticks] {
+  stroke-width: 7;
+  stroke: rgba(18, 73, 36, 0.16);
+}
+
+.m-center {
+  fill: var(--orange);
+}
+
+/* Idle echo: a ring leaves the centre every few seconds and passes through the
+   orbits. Its scale is set from JS so it always just clears the outer one. */
+.m-pulse {
+  fill: none;
+  stroke: var(--orange);
+  stroke-width: 1.2;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: m-pulse 3.8s cubic-bezier(0.2, 0.55, 0.3, 1) infinite;
+}
+
+.m-pulse--late {
+  animation-delay: 1.9s;
+}
+
+.is-aligned .m-pulse {
+  animation-duration: 2.6s;
+  stroke-width: 1.6;
+}
+
+.is-aligned .m-pulse--late {
+  animation-delay: 1.3s;
+}
+
+/* Set by the next section as its iris starts; see method-engine.ts. */
+.is-closing .m-pulse {
+  animation: none;
+}
+
+@keyframes m-pulse {
+  0% {
+    opacity: 0.55;
+    transform: scale(1);
+  }
+  80%,
+  100% {
+    opacity: 0;
+    transform: scale(var(--pulse-scale, 20));
+  }
+}
+
+.m-node__dot {
+  fill: var(--forest-brand);
+  transition: fill 320ms ease;
+}
+
+.m-node__halo {
+  fill: none;
+  stroke: var(--orange);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+}
+
+[data-lit="true"] .m-node__dot {
+  fill: var(--orange);
+}
+
+.m-node__label,
+.m-integrated {
+  font-family: var(--font-sans), Arial, sans-serif;
+  font-size: 10.5px;
+  font-weight: 650;
+  letter-spacing: 0.12em;
+  fill: var(--forest-950);
+  /* A cream outline knocks the rings out from behind the letters. */
+  paint-order: stroke;
+  stroke: var(--cream);
+  stroke-width: 5px;
+  stroke-linejoin: round;
+  opacity: 0;
+}
+
+.m-integrated {
+  font-size: 11px;
+  fill: var(--forest-brand);
+}
+
+.m-axis {
+  stroke: var(--orange);
+  stroke-width: 1.6;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+}
+
+.m-axis__cap {
+  fill: var(--orange);
+}
+
+.m-sat__spoke {
+  stroke: rgba(18, 73, 36, 0.38);
+  stroke-width: 1;
+  stroke-dasharray: 2 4;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+}
+
+.m-sat__dot {
+  fill: var(--forest-brand);
+  opacity: 0.55;
+}
+
+/* ---- Copy --------------------------------------------------------------- */
+
+.manifesto__copy {
+  position: absolute;
+  z-index: 3;
+  top: 50%;
+  left: var(--page-padding);
+  width: min(44rem, 52vw);
+  transform: translateY(-47%);
+}
+
+.manifesto__eyebrow {
+  display: flex;
+  margin: 0 0 1.7rem;
+  align-items: center;
+  gap: 0.65rem;
+  color: rgba(7, 26, 16, 0.6);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.manifesto__eyebrow > span {
+  width: 0.42rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 0 0.27rem rgba(255, 160, 19, 0.16);
+}
+
+.manifesto__eyebrow b {
+  color: var(--orange);
+  font-size: 0.8em;
+}
+
+/* Every slide sits in the same cell; the engine decides which one is showing. */
+.manifesto__slides {
+  display: grid;
+}
+
+.manifesto__slide {
+  grid-area: 1 / 1;
+  align-self: start;
+}
+
+.m-mask {
+  display: block;
+  padding-right: 0.14em;
+  padding-bottom: 0.06em;
+  overflow: hidden;
+}
+
+.m-mask > span {
+  display: block;
+  transform: translateY(112%);
+  will-change: transform;
+}
+
+.manifesto__giant {
+  color: var(--forest-brand);
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(6.5rem, 15.4vw, 14.5rem);
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.045em;
+  line-height: 0.9;
+}
+
+.manifesto__sub {
+  margin-top: 0.1em;
+  font-size: clamp(2.3rem, 4.35vw, 4.3rem);
+  font-weight: 450;
+  letter-spacing: -0.055em;
+  line-height: 1;
+}
+
+.manifesto__statement {
+  margin: 0;
+  max-width: 24em;
+  font-size: clamp(1.75rem, 2.75vw, 2.95rem);
+  font-weight: 450;
+  letter-spacing: -0.042em;
+  line-height: 1.13;
+  opacity: 0;
+}
+
+.m-word {
+  opacity: 0.14;
+}
+
+.m-word--key {
+  color: var(--forest-brand);
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+/* ---- Chrome ------------------------------------------------------------- */
+
+.manifesto__foot {
+  position: absolute;
+  z-index: 4;
+  right: var(--page-padding);
+  bottom: 2rem;
+  left: var(--page-padding);
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+}
+
+.manifesto__steps {
+  display: flex;
+  margin: 0;
+  padding: 0;
+  align-items: center;
+  gap: 2rem;
+  font-size: 0.64rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  list-style: none;
+  text-transform: uppercase;
+}
+
+.manifesto__step {
+  display: flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.6rem;
+  color: rgba(7, 26, 16, 0.34);
+  transition: color 320ms ease;
+}
+
+.manifesto__step i {
+  width: 0.42rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: currentColor;
+  transition: background-color 320ms ease, box-shadow 320ms ease;
+}
+
+.manifesto__step[data-active="true"] {
+  color: var(--forest-950);
+}
+
+.manifesto__step[data-active="true"] i {
+  background: var(--orange);
+  box-shadow: 0 0 0 0.27rem rgba(255, 160, 19, 0.18);
+}
+
+/* The rule closes along the base as the section plays, like the loader's. */
+.manifesto__rule {
+  position: absolute;
+  z-index: 4;
+  right: var(--page-padding);
+  bottom: 1.1rem;
+  left: var(--page-padding);
+  height: 1px;
+  overflow: hidden;
+  background: rgba(7, 26, 16, 0.14);
+}
+
+.manifesto__rule i {
+  display: block;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, var(--forest-brand), var(--green) 62%, var(--orange));
+  transform: scaleX(0);
+  transform-origin: left;
+}
+
+/* ---- Phones ------------------------------------------------------------- */
+
+@media (max-width: 767px) {
+  .manifesto__copy {
+    top: 6.3rem;
+    right: var(--page-padding);
+    width: auto;
+    transform: none;
+  }
+
+  .manifesto__eyebrow {
+    margin-bottom: 1.2rem;
+    font-size: 0.55rem;
+  }
+
+  .manifesto__giant {
+    font-size: clamp(5.2rem, 29vw, 8.2rem);
+  }
+
+  .manifesto__sub {
+    font-size: clamp(1.85rem, 9vw, 2.6rem);
+  }
+
+  .manifesto__statement {
+    font-size: clamp(1.5rem, 6.6vw, 2rem);
+    line-height: 1.16;
+  }
+
+  .manifesto__steps {
+    gap: 1.1rem;
+    font-size: 0.55rem;
+  }
+
+  .manifesto__foot {
+    bottom: 1.5rem;
+  }
+}
+
+/* ---- No motion / no script: the finished picture, in normal flow ---------- */
+
+.manifesto--static {
+  position: relative;
+  inset: auto;
+  clip-path: none;
+}
+
+.manifesto--static .manifesto__frame {
+  position: relative;
+  display: grid;
+  min-height: 100svh;
+  padding: 9rem var(--page-padding) 6rem;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  align-items: center;
+  gap: 3rem;
+}
+
+.manifesto--static .site-header,
+.manifesto--static .manifesto__foot,
+.manifesto--static .manifesto__rule {
+  display: none;
+}
+
+.manifesto--static .manifesto__copy {
+  position: relative;
+  top: auto;
+  left: auto;
+  grid-column: 1;
+  grid-row: 1;
+  width: auto;
+  transform: none;
+}
+
+.manifesto--static .manifesto__slides {
+  display: flex;
+  flex-direction: column;
+  gap: 3.2rem;
+}
+
+.manifesto--static .m-mask > span {
+  transform: none;
+}
+
+.manifesto--static .manifesto__statement,
+.manifesto--static .m-word {
+  opacity: 1;
+}
+
+.manifesto--static .manifesto__figure {
+  position: relative;
+  grid-column: 2;
+  grid-row: 1;
+  aspect-ratio: 1;
+  height: auto;
+}
+
+@media (max-width: 767px) {
+  .manifesto--static .manifesto__frame {
+    grid-template-columns: minmax(0, 1fr);
+    padding-top: 7rem;
+  }
+
+  .manifesto--static .manifesto__figure {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .m-pulse {
+    animation: none;
+  }
+}
+
+@media (scripting: none) {
+  .manifesto {
+    position: relative;
+    inset: auto;
+    clip-path: none;
+  }
+
+  .manifesto__frame {
+    position: relative;
+    height: auto;
+    padding: 9rem var(--page-padding) 6rem;
+  }
+
+  .manifesto__copy {
+    position: relative;
+    top: auto;
+    left: auto;
+    width: auto;
+    transform: none;
+  }
+
+  .manifesto__slides {
+    display: flex;
+    flex-direction: column;
+    gap: 3rem;
+  }
+
+  .m-mask > span {
+    transform: none;
+  }
+
+  .manifesto__statement,
+  .m-word {
+    opacity: 1;
+  }
+
+  .manifesto .site-header,
+  .manifesto__foot,
+  .manifesto__rule,
+  .manifesto__figure {
+    display: none;
+  }
+}

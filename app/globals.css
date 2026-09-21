@@ -11,6 +11,10 @@
   --ink: #102016;
   --border-light: rgba(244, 228, 200, 0.2);
   --page-padding: clamp(1.25rem, 4.45vw, 4rem);
+  /* Paper grain for the cream surfaces (section 02 and the lens). Blend it into a
+     background with `background-blend-mode: multiply`; as an overlay it would force
+     a repaint of everything beneath it on every frame. */
+  --paper-grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.82' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.1'/%3E%3C/svg%3E");
 }
 
 * {
@@ -19,7 +23,6 @@
 
 html {
   background: var(--forest-950);
-  scroll-behavior: smooth;
 }
 
 body {
@@ -97,33 +100,6 @@ button {
   filter: blur(28px);
 }
 
-.topography {
-  position: absolute;
-  z-index: 3;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  pointer-events: none;
-}
-
-.topography path {
-  fill: none;
-  stroke: rgba(244, 228, 200, 0.26);
-  stroke-width: 1;
-  stroke-dasharray: 2600;
-  stroke-dashoffset: 2600;
-  vector-effect: non-scaling-stroke;
-}
-
-/* The two that leave the root flare carry the hand-off, so they read first. */
-.topography .topography__lead {
-  stroke: rgba(244, 228, 200, 0.4);
-}
-
-.topography .topography__arc {
-  stroke: rgba(244, 228, 200, 0.15);
-}
-
 .hero-tree {
   position: absolute;
   z-index: 1;
@@ -131,9 +107,7 @@ button {
   overflow: hidden;
   opacity: 0;
   pointer-events: none;
-  transform: scale(1.045);
-  transform-origin: 72% 58%;
-  will-change: opacity, transform;
+  will-change: opacity;
 }
 
 .hero-tree__poster {
@@ -178,9 +152,9 @@ button {
     linear-gradient(
       95deg,
       var(--forest-950) 0%,
-      rgba(7, 26, 16, 0.93) 26%,
-      rgba(7, 26, 16, 0.34) 48%,
-      rgba(7, 26, 16, 0) 64%
+      rgba(7, 26, 16, 0.9) 22%,
+      rgba(7, 26, 16, 0.3) 40%,
+      rgba(7, 26, 16, 0) 50%
     ),
     linear-gradient(
       0deg,
@@ -191,10 +165,12 @@ button {
     );
 }
 
-/* Vignette + film grain: the last 5% that separates a render from a page. */
+/* Vignette + film grain: the last 5% that separates a render from a page. It
+   sits behind the tree on purpose — blended over the canopy it turned the leaves
+   flat and soft. */
 .hero__atmosphere {
   position: absolute;
-  z-index: 6;
+  z-index: 0;
   inset: 0;
   pointer-events: none;
 }
@@ -563,72 +539,28 @@ button {
   transform: translateY(0.85rem);
 }
 
-.vision-teaser {
+/* Holds the hero and the section that grows out of it. The pin lives here. */
+.stage {
   position: relative;
-  display: grid;
-  min-height: 100svh;
-  padding: 8rem var(--page-padding);
-  overflow: clip;
-  grid-template-columns: minmax(7rem, 0.24fr) minmax(32rem, 1fr) minmax(15rem, 0.38fr);
-  align-items: center;
-  gap: 2.2rem;
-  background: var(--cream);
-  color: var(--forest-950);
 }
 
-.vision-teaser__index {
-  display: flex;
-  align-self: start;
-  margin-top: 1.2rem;
-  flex-direction: column;
-  gap: 0.5rem;
-  color: rgba(7, 26, 16, 0.56);
-  font-size: 0.68rem;
-  font-weight: 650;
-  letter-spacing: 0.13em;
-  text-transform: uppercase;
+/* Set by StageSequence while the stage is scrolled out of view. */
+.stage--offscreen *,
+.stage--offscreen *::before,
+.stage--offscreen *::after {
+  animation-play-state: paused !important;
 }
 
-.vision-teaser h2 {
-  position: relative;
-  z-index: 2;
-  margin: 0;
-  font-size: clamp(4.5rem, 7.7vw, 7.5rem);
-  font-weight: 450;
-  letter-spacing: -0.065em;
-  line-height: 0.9;
-}
-
-.vision-teaser h2 span {
-  color: var(--forest-brand);
-  font-family: var(--font-serif), Georgia, serif;
-  font-style: italic;
-  font-weight: 400;
-}
-
-.vision-teaser > p {
-  position: relative;
-  z-index: 2;
-  max-width: 20rem;
-  align-self: end;
-  margin: 0 0 2rem;
-  color: rgba(7, 26, 16, 0.65);
-  font-size: 1rem;
-  line-height: 1.65;
-}
-
-.vision-teaser__orb {
+.sr-only {
   position: absolute;
-  right: -12vw;
-  bottom: -27vw;
-  width: 62vw;
-  aspect-ratio: 1;
-  border: 1px solid rgba(18, 73, 36, 0.12);
-  border-radius: 50%;
-  box-shadow:
-    0 0 0 4vw rgba(18, 73, 36, 0.035),
-    0 0 0 11vw rgba(18, 73, 36, 0.025),
-    0 0 0 19vw rgba(18, 73, 36, 0.018);
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .loader {
@@ -641,11 +573,66 @@ button {
   overflow: hidden;
   flex-direction: column;
   justify-content: center;
-  background:
-    radial-gradient(circle at 50% 46%, rgba(63, 163, 96, 0.14), transparent 31%),
-    var(--forest-950);
-  clip-path: inset(0 0 0 0);
-  transition: clip-path 820ms cubic-bezier(0.76, 0, 0.24, 1);
+  background: var(--forest-950);
+}
+
+/* The soft glow behind the logo. Its own layer, so it can fade on the way out. */
+.loader__glow {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: radial-gradient(circle at 50% 46%, rgba(63, 163, 96, 0.14), transparent 31%);
+  pointer-events: none;
+  transition: opacity 380ms ease;
+}
+
+/*
+ * On the way out the loader's ground becomes this veil: the same colour, but drawn
+ * as a path so it can have a hole. Trail, ring and node are drawn on it, in pixels.
+ * See loading-screen.tsx.
+ */
+.loader__veil {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  display: none;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.loader__veil-base {
+  fill: var(--forest-950);
+}
+
+.loader__trail {
+  fill: none;
+  stroke: url(#loader-trail);
+  stroke-linecap: round;
+  stroke-width: 1.6;
+}
+
+.loader__rim {
+  fill: none;
+  stroke: var(--orange);
+  stroke-width: 1.6;
+  opacity: 0;
+}
+
+/* The same dial of ticks the lens of section 03 wears. */
+.loader__ticks {
+  fill: none;
+  stroke: rgba(255, 160, 19, 0.5);
+  stroke-width: 7;
+  opacity: 0;
+}
+
+.loader__seed-halo {
+  fill: rgba(255, 160, 19, 0.2);
+}
+
+.loader__seed {
+  fill: var(--orange);
 }
 
 .loader::before,
@@ -656,6 +643,7 @@ button {
   border: 1px solid rgba(184, 237, 163, 0.055);
   border-radius: 50%;
   content: "";
+  transition: opacity 320ms ease;
 }
 
 .loader::before {
@@ -668,8 +656,10 @@ button {
   bottom: -33vw;
 }
 
-.loader--exiting {
-  clip-path: inset(0 0 100% 0);
+.loader--exiting::before,
+.loader--exiting::after,
+.loader--exiting .loader__glow {
+  opacity: 0;
 }
 
 .loader--exiting .loader__center,
@@ -754,6 +744,12 @@ button {
 .loader__diagram--phase-3 .loader__node {
   opacity: 1;
   animation: node-pulse 650ms ease-out 1;
+}
+
+/* On the way out the node is the one drawn on the veil, which carries on from here. */
+.loader--exiting .loader__diagram .loader__node {
+  opacity: 0;
+  animation: none;
 }
 
 .loader__label,
@@ -899,15 +895,6 @@ button {
     flex-direction: row;
     align-items: center;
   }
-
-  .vision-teaser {
-    grid-template-columns: 7rem 1fr;
-  }
-
-  .vision-teaser > p {
-    grid-column: 2;
-    align-self: start;
-  }
 }
 
 @media (max-width: 767px) {
@@ -1024,8 +1011,7 @@ button {
     background:
       /* Darkens the upper band the copy sits on. */
       linear-gradient(180deg, rgba(7, 26, 16, 0.9) 0%, rgba(7, 26, 16, 0.58) 46%, transparent 68%),
-      linear-gradient(90deg, var(--forest-950) 0%, rgba(7, 26, 16, 0.72) 30%, rgba(7, 26, 16, 0.12) 70%, transparent),
-      linear-gradient(0deg, var(--forest-950) 0%, rgba(7, 26, 16, 0.72) 10%, transparent 34%);
+      linear-gradient(0deg, var(--forest-950) 0%, rgba(7, 26, 16, 0.6) 6%, transparent 15%);
   }
 
   .hero__ambient {
@@ -1041,39 +1027,6 @@ button {
   .hero__scroll {
     bottom: 1.15rem;
     font-size: 0.55rem;
-  }
-
-  /* No transform on phones: the viewBox already stretches, and shifting it
-     pushed the point every line radiates from off the bottom of the screen. */
-
-  .vision-teaser {
-    min-height: 100svh;
-    padding: 5rem var(--page-padding);
-    grid-template-columns: 1fr;
-    align-content: center;
-    gap: 2.4rem;
-  }
-
-  .vision-teaser__index {
-    margin: 0;
-    flex-direction: row;
-    gap: 1.2rem;
-  }
-
-  .vision-teaser h2 {
-    font-size: clamp(3.2rem, 15vw, 4.25rem);
-    line-height: 0.94;
-  }
-
-  .vision-teaser > p {
-    grid-column: 1;
-    margin: 0;
-  }
-
-  .vision-teaser__orb {
-    right: -45vw;
-    bottom: -18vw;
-    width: 110vw;
   }
 
   .loader {
@@ -1138,18 +1091,17 @@ button {
     transition-duration: 0.01ms !important;
   }
 
-  [data-reveal],
-  .hero-tree {
+  [data-reveal] {
     opacity: 1;
     transform: none;
   }
 
-  .hero-title__line > span {
-    transform: none;
+  .hero-tree {
+    opacity: 1;
   }
 
-  .topography path {
-    stroke-dashoffset: 0;
+  .hero-title__line > span {
+    transform: none;
   }
 }
 
@@ -1158,17 +1110,16 @@ button {
     display: none;
   }
 
-  [data-reveal],
-  .hero-tree {
+  [data-reveal] {
     opacity: 1;
     transform: none;
   }
 
-  .hero-title__line > span {
-    transform: none;
+  .hero-tree {
+    opacity: 1;
   }
 
-  .topography path {
-    stroke-dashoffset: 0;
+  .hero-title__line > span {
+    transform: none;
   }
 }
