@@ -1,9 +1,9 @@
 /**
- * Section 05, "Quem sou eu?". Like the sections before it, one function of scroll
+ * Section 06, "Quem sou eu?". Like the sections before it, one function of scroll
  * progress, so any frame can be reproduced exactly and scrolling back plays it
  * backwards. It receives two progresses:
  *
- *  - `rise` (0..1): the forest comes up over the paper of section 04 as terrain, a
+ *  - `rise` (0..1): the forest comes up over the green of section 05 as terrain, a
  *    wavy edge climbing the screen with contour lines running ahead of it (the
  *    waves of the brand's documents). The first stretch is a hold, so the closing
  *    panel of the section before can still be read and used.

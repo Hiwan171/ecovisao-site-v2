@@ -1,5 +1,5 @@
 /*
- * Section 05, "Quem sou eu?". A frame-sized layer at the top of the stage. It waits
+ * Section 06, "Quem sou eu?". A frame-sized layer at the top of the stage. It waits
  * hidden, is revealed by a wavy clip-path as the terrain rises (yuri-engine.ts), and
  * then holds the screen. Inline styles from the engine override the resting look
  * here, which is why so much starts at opacity 0.
@@ -40,7 +40,7 @@
 }
 
 /*
- * The contour lines that run ahead of the terrain, over the paper. The strip inside
+ * The contour lines that run ahead of the terrain, over the green of section 05. The strip inside
  * is drawn once and only moved (transform), which is why it costs nothing per frame.
  */
 .yuri-lines {
@@ -60,7 +60,7 @@
 
 .yuri-lines path {
   fill: none;
-  stroke: var(--forest-brand);
+  stroke: var(--sage);
   stroke-width: 1.2;
 }
 

@@ -8,8 +8,9 @@
 # production
 /build
 
-# local env files
+# local env files (the template, .env.example, is tracked on purpose)
 .env*
+!.env.example
 
 # misc
 .DS_Store

@@ -4,6 +4,8 @@ import { gsap } from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { type RefObject, useEffect, useRef, useState } from "react";
 import type { CrownPosition } from "../hero/hero-scene";
+import { Cta } from "../cta/cta";
+import { createCtaEngine } from "../cta/cta-engine";
 import { Manifesto } from "../manifesto/manifesto";
 import {
   ANCHOR_PROGRESS,
@@ -12,12 +14,16 @@ import {
 } from "../manifesto/manifesto-engine";
 import { Method } from "../method/method";
 import { type MethodEngine, createMethodEngine } from "../method/method-engine";
+import { Pgrss } from "../pgrss/pgrss";
+import { createPgrssEngine } from "../pgrss/pgrss-engine";
+import { Proof } from "../proof/proof";
+import { VOICE_AT, createProofEngine } from "../proof/proof-engine";
 import { useScrollTo } from "../smooth-scroll/smooth-scroll";
 import { SolutionsTrack } from "../solutions/solutions";
 import { createSolutionsEngine } from "../solutions/solutions-engine";
 import { Yuri } from "../yuri/yuri";
 import { createYuriEngine } from "../yuri/yuri-engine";
-import { type Beats, createBeats } from "./timeline";
+import { type Anchor, type Beats, createBeats } from "./timeline";
 
 type StageSequenceProps = {
   /** The pinned box that holds the hero and everything that grows out of it. */
@@ -31,7 +37,8 @@ type StageSequenceProps = {
 
 /**
  * Owns the one pin and the one scroll loop that drive the manifesto, the iris,
- * the method and the solutions track. Each section is an engine that only ever sees its own 0..1
+ * the method, the solutions track, the PGRSS specialty, the founder and the stories
+ * of the people who trusted them and the closing. Each section is an engine that only ever sees its own 0..1
  * (see timeline.ts); this component is the only place that knows they share a
  * scroll, which is what lets a beat be retuned or a new one slotted in.
  */
@@ -45,7 +52,10 @@ export function StageSequence({
 }: StageSequenceProps) {
   const [methodActive, setMethodActive] = useState(false);
   const [opened, setOpened] = useState(false);
+  const [pgrssOpen, setPgrssOpen] = useState(false);
   const [yuriOpen, setYuriOpen] = useState(false);
+  const [proofOpen, setProofOpen] = useState(false);
+  const [ctaOpen, setCtaOpen] = useState(false);
   const manifestoRef = useRef<ManifestoEngine | null>(null);
   const methodRef = useRef<MethodEngine | null>(null);
   const crownRef = useRef(crown);
@@ -64,7 +74,10 @@ export function StageSequence({
     const manifesto = createManifestoEngine(stage, { onCover });
     const method = createMethodEngine(stage, { onActive: setMethodActive, onOpen: setOpened });
     const solutions = createSolutionsEngine(stage);
+    const pgrss = createPgrssEngine(stage, { onOpen: setPgrssOpen });
     const yuri = createYuriEngine(stage, { onOpen: setYuriOpen });
+    const proof = createProofEngine(stage, { onOpen: setProofOpen });
+    const cta = createCtaEngine(stage, { onOpen: setCtaOpen });
     manifestoRef.current = manifesto;
     methodRef.current = method;
     manifesto.setCrown(crownRef.current);
@@ -74,7 +87,10 @@ export function StageSequence({
       manifesto.destroy();
       method.destroy();
       solutions.destroy();
+      pgrss.destroy();
       yuri.destroy();
+      proof.destroy();
+      cta.destroy();
       manifestoRef.current = null;
       methodRef.current = null;
     };
@@ -85,7 +101,10 @@ export function StageSequence({
         manifesto.paintStatic();
         method.paintStatic();
         solutions.paintStatic();
+        pgrss.paintStatic();
         yuri.paintStatic();
+        proof.paintStatic();
+        cta.paintStatic();
       };
       paint();
       const observer = new ResizeObserver(paint);
@@ -125,7 +144,10 @@ export function StageSequence({
       const settled = manifesto.render(parts.manifesto, now, immediate);
       method.render(parts.iris, parts.method, parts.open, parts.rise >= 1);
       solutions.render(parts.open, parts.solutions);
+      pgrss.render(parts.columns, parts.pgrss, now);
       yuri.render(parts.rise, parts.yuri);
+      proof.render(parts.bloom, parts.proof, parts.doors, now);
+      cta.render(parts.doors, parts.cta, now);
       return settled;
     };
 
@@ -194,7 +216,10 @@ export function StageSequence({
         manifesto.measure();
         method.measure();
         solutions.measure();
+        pgrss.measure();
         yuri.measure();
+        proof.measure();
+        cta.measure();
         snap(self.progress);
       },
     });
@@ -222,6 +247,34 @@ export function StageSequence({
     };
     document.addEventListener("click", onClick);
 
+    // The arrows and dots of the stories: each voice sits at a known point of the
+    // scroll, so choosing one is scrolling there.
+    const onSeek = (event: MouseEvent) => {
+      const button = (event.target as Element | null)?.closest<HTMLElement>("[data-pf-seek]");
+      if (!button) return;
+
+      const current = Number(stage.querySelector('[data-pf="root"]')?.getAttribute("data-index") ?? 0);
+      const wanted = button.dataset.pfSeek;
+      const voice =
+        wanted === "next" ? current + 1 : wanted === "prev" ? current - 1 : Number(wanted);
+      const at = VOICE_AT[Math.min(VOICE_AT.length - 1, Math.max(0, voice))];
+
+      scrollTo(trigger.start + (trigger.end - trigger.start) * beats.proofAt(at));
+    };
+    document.addEventListener("click", onSeek);
+
+    // The footer's links: the sections live inside the pin, so a
+    // plain hash would land before their reveal. Each name is a moment of the scroll.
+    const onGoto = (event: MouseEvent) => {
+      const link = (event.target as Element | null)?.closest<HTMLElement>("[data-goto]");
+      if (!link) return;
+
+      event.preventDefault();
+      const name = link.dataset.goto;
+      scrollTo(trigger.start + (trigger.end - trigger.start) * beats.anchor(name as Anchor));
+    };
+    document.addEventListener("click", onGoto);
+
     let cancelled = false;
     document.fonts?.ready.then(() => {
       if (!cancelled) ScrollTrigger.refresh();
@@ -230,6 +283,8 @@ export function StageSequence({
     return () => {
       cancelled = true;
       document.removeEventListener("click", onClick);
+      document.removeEventListener("click", onSeek);
+      document.removeEventListener("click", onGoto);
       window.removeEventListener("scroll", follow);
       visibility.disconnect();
       stage.classList.remove("stage--offscreen");
@@ -247,9 +302,12 @@ export function StageSequence({
         active={methodActive}
         opened={opened}
         track={<SolutionsTrack staticMode={staticMode} />}
-        covered={yuriOpen}
+        covered={pgrssOpen}
       />
-      <Yuri staticMode={staticMode} open={yuriOpen} />
+      <Pgrss staticMode={staticMode} open={pgrssOpen} covered={yuriOpen} />
+      <Yuri staticMode={staticMode} open={yuriOpen} covered={proofOpen} />
+      <Proof staticMode={staticMode} open={proofOpen} covered={ctaOpen} />
+      <Cta staticMode={staticMode} open={ctaOpen} />
     </>
   );
 }

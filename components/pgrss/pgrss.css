@@ -1,0 +1,727 @@
+/*
+ * Section 05, "PGRSS". A frame-sized layer at the top of the stage. It waits hidden,
+ * is uncovered by four columns that climb through the paper of section 04
+ * (pgrss-engine.ts), and then holds the screen. Inline styles from the engine
+ * override the resting look here, which is why so much starts at opacity 0.
+ *
+ * Its ground is the brand's own forest green, the one saturated dark on the page: the
+ * paper before it is cream and the terrain after it is almost black, so both edges read.
+ */
+
+.pgrss,
+.pgrss-caps {
+  position: absolute;
+  inset: auto 0 0;
+  height: min(100svh, 100%);
+}
+
+.pgrss {
+  /* Clear of the header: it ends at about 5rem, and the words need air under it. */
+  --pg-top: 8.2rem;
+  /* Where the line that sorts sits, as a fraction of the height; the lanes run from it down. */
+  --pg-gate: 0.5;
+  /* 1 = the three promises take turns in one place (phones). Read by the engine. */
+  --pg-stack: 0;
+
+  z-index: 25;
+  overflow: clip;
+  color: var(--cream);
+  background:
+    radial-gradient(110% 80% at 70% 26%, rgba(52, 140, 82, 0.5), transparent 62%),
+    radial-gradient(70% 60% at 8% 92%, rgba(7, 26, 16, 0.5), transparent 70%),
+    linear-gradient(176deg, #0f3d1f 0%, var(--forest-brand) 46%, #0d3a1c 100%);
+  visibility: hidden;
+}
+
+/* The same grain the other dark sections wear. */
+.pgrss::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  content: "";
+  opacity: 0.3;
+  mix-blend-mode: overlay;
+  background-image: var(--paper-grain);
+  pointer-events: none;
+}
+
+.pgrss__bg {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+}
+
+.pgrss__header {
+  z-index: 6;
+}
+
+/* ---- The orange edge of each column, over the paper --------------------- */
+
+.pgrss-caps {
+  z-index: 25;
+  overflow: clip;
+  pointer-events: none;
+  visibility: hidden;
+}
+
+.pgrss-caps i {
+  position: absolute;
+  top: -2px;
+  left: 0;
+  width: 25%;
+  height: 2px;
+  background: var(--orange);
+  box-shadow: 0 0 22px 3px rgba(255, 160, 19, 0.5);
+  opacity: 0;
+  will-change: transform, opacity;
+}
+
+.pgrss-caps i:nth-child(2) {
+  left: 25%;
+}
+
+.pgrss-caps i:nth-child(3) {
+  left: 50%;
+}
+
+.pgrss-caps i:nth-child(4) {
+  left: 75%;
+}
+
+/* ---- The drawing -------------------------------------------------------- */
+
+.pgrss__field {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  pointer-events: none;
+}
+
+.pgrss__canvas {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  display: block;
+}
+
+.pgrss__lanes {
+  position: absolute;
+  z-index: 1;
+  inset: calc(var(--pg-gate) * 100%) 0 0;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+}
+
+.pgrss__lane {
+  position: relative;
+  border-left: 1px solid rgba(184, 237, 163, 0.13);
+  background: linear-gradient(rgba(7, 26, 16, 0), rgba(7, 26, 16, 0.3));
+  opacity: 0;
+}
+
+.pgrss__lane:nth-child(even) {
+  background: linear-gradient(rgba(7, 26, 16, 0), rgba(7, 26, 16, 0.14));
+}
+
+.pgrss__lane:first-child {
+  border-left-color: transparent;
+}
+
+/* The group's mark, its letter and its name, seated at the foot of the lane. */
+.pgrss__group {
+  position: absolute;
+  right: 0.4rem;
+  bottom: 1.35rem;
+  left: 0.4rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.34rem;
+  text-align: center;
+}
+
+.pgrss__group b {
+  font-size: clamp(1.5rem, 2.4vw, 2.2rem);
+  font-weight: 500;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.pgrss__group > span {
+  color: rgba(244, 228, 200, 0.72);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+/* The four marks the particles wear, so colour is never the only way to tell them apart. */
+.pgrss__mark {
+  display: block;
+  width: 0.62rem;
+  aspect-ratio: 1;
+  background: currentColor;
+}
+
+.pgrss__mark--dot {
+  border-radius: 50%;
+}
+
+.pgrss__mark--diamond {
+  transform: rotate(45deg) scale(0.86);
+}
+
+.pgrss__mark--triangle {
+  clip-path: polygon(50% 4%, 100% 92%, 0 92%);
+}
+
+/* The line that sorts: hairline, a glow that sweeps along it, and a label. */
+.pgrss__gate {
+  --pg-sweep: 0px;
+
+  position: absolute;
+  z-index: 1;
+  top: calc(var(--pg-gate) * 100%);
+  right: 0;
+  left: 0;
+  height: 1px;
+  background: rgba(255, 160, 19, 0.36);
+  opacity: 0;
+  transition: background-color 0.6s ease;
+}
+
+.pgrss__gate[data-hot="true"] {
+  background: rgba(255, 160, 19, 0.7);
+}
+
+.pgrss__gate::before {
+  position: absolute;
+  top: -1px;
+  left: var(--pg-sweep);
+  width: min(26rem, 40vw);
+  height: 3px;
+  content: "";
+  background: radial-gradient(closest-side, var(--orange), rgba(255, 160, 19, 0));
+  transform: translateX(-50%);
+}
+
+.pgrss__gate span {
+  position: absolute;
+  top: 0.75rem;
+  left: var(--page-padding);
+  color: var(--orange);
+  font-size: 0.62rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+/* ---- The seal ----------------------------------------------------------- */
+
+.pgrss__seal {
+  position: absolute;
+  z-index: 3;
+  top: var(--pg-bin, 80%);
+  left: 50%;
+  width: var(--pg-seal, 15rem);
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(8, 32, 18, 0.72) 0 52%, transparent 71%);
+  opacity: 0;
+  transform: translate3d(-50%, -50%, 0) scale(0.82);
+}
+
+.pgrss__seal svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.pgrss__seal-ticks {
+  fill: none;
+  stroke: rgba(255, 160, 19, 0.6);
+  stroke-width: 1.5;
+}
+
+.pgrss__seal-ring {
+  fill: none;
+  stroke: var(--orange);
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  stroke-width: 0.9;
+  transform: rotate(-90deg);
+  transform-origin: 50% 50%;
+  transform-box: view-box;
+}
+
+.pgrss__seal g {
+  transform-origin: 50% 50%;
+  transform-box: view-box;
+}
+
+.pgrss__seal text {
+  fill: var(--sage);
+  font-size: 8.4px;
+  font-weight: 600;
+}
+
+.pgrss__seal-check {
+  fill: none;
+  stroke: var(--lime);
+  stroke-dasharray: 1;
+  stroke-dashoffset: 1;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 5;
+}
+
+.pgrss__seal-node {
+  fill: var(--orange);
+  opacity: 0;
+}
+
+/* ---- The giant word ------------------------------------------------------ */
+
+/* Outlined, so what falls through it is what is in front: the waste is the subject. */
+.pgrss__word {
+  position: absolute;
+  z-index: 1;
+  top: calc(var(--pg-top) - 0.4rem);
+  right: var(--page-padding);
+  margin: 0;
+  color: transparent;
+  font-size: clamp(5rem, min(21svh, 15vw), 15rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 0.82;
+  -webkit-text-stroke: 1px rgba(184, 237, 163, 0.36);
+  pointer-events: none;
+  user-select: none;
+  will-change: transform, opacity;
+}
+
+.pgrss__word-letters {
+  display: flex;
+}
+
+.pg-mask {
+  display: block;
+  padding: 0.04em 0.02em 0.06em 0;
+  overflow: hidden;
+}
+
+.pg-mask > span {
+  display: block;
+  transform: translateY(112%);
+}
+
+/* ---- The words ---------------------------------------------------------- */
+
+.pgrss__copy {
+  position: absolute;
+  z-index: 3;
+  top: var(--pg-top);
+  right: var(--page-padding);
+  left: var(--page-padding);
+  height: calc(var(--pg-gate) * 100% - var(--pg-top) - 1.4rem);
+  pointer-events: none;
+}
+
+.pgrss__copy a {
+  pointer-events: auto;
+}
+
+.pgrss__eyebrow {
+  display: flex;
+  margin: 0 0 1.1rem;
+  align-items: center;
+  gap: 0.65rem;
+  color: rgba(244, 228, 200, 0.72);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0;
+}
+
+.pgrss__eyebrow > span {
+  width: 0.42rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 0 0.27rem rgba(255, 160, 19, 0.18);
+}
+
+.pgrss__eyebrow b {
+  color: var(--orange);
+  font-size: 0.8em;
+}
+
+.pgrss__eyebrow em {
+  color: var(--lime);
+  font-style: normal;
+}
+
+/* The acts share one cell and hand over to each other. */
+.pgrss__acts {
+  display: grid;
+}
+
+.pgrss__act,
+.pgrss__pledges {
+  grid-area: 1 / 1;
+  opacity: 0;
+}
+
+.pgrss__lead {
+  max-width: 31rem;
+  margin: 0;
+  font-size: clamp(1rem, min(1.5vw, 3.1svh), 1.5rem);
+  letter-spacing: -0.02em;
+  line-height: 1.32;
+}
+
+.pgrss__title {
+  margin: 0;
+  font-size: clamp(2.2rem, min(4.5vw, 8.2svh), 4.8rem);
+  font-weight: 500;
+  letter-spacing: -0.048em;
+  line-height: 0.96;
+}
+
+.pgrss__title em,
+.pgrss__close em {
+  color: var(--lime);
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+}
+
+.pgrss__sub {
+  max-width: 28rem;
+  margin: 0.9rem 0 0;
+  color: rgba(244, 228, 200, 0.76);
+  font-size: clamp(0.92rem, 1.15vw, 1.1rem);
+  line-height: 1.4;
+}
+
+/* The three promises: side by side, read left to right as the flow goes on. */
+.pgrss__pledges {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  gap: clamp(1.2rem, 3vw, 3rem);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  list-style: none;
+  align-content: start;
+}
+
+.pgrss__pledges li {
+  padding-top: 0.85rem;
+  border-top: 1px solid rgba(244, 228, 200, 0.26);
+  opacity: 0;
+}
+
+.pgrss__pledges b {
+  color: var(--orange);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 0.16em;
+}
+
+.pgrss__pledges h3 {
+  margin: 0.45rem 0 0;
+  font-size: clamp(1.2rem, min(2vw, 4.2svh), 1.8rem);
+  font-weight: 500;
+  letter-spacing: -0.035em;
+  line-height: 1.08;
+}
+
+.pgrss__pledges p {
+  max-width: 21rem;
+  margin: 0.55rem 0 0;
+  color: rgba(244, 228, 200, 0.74);
+  font-size: clamp(0.84rem, 1vw, 0.97rem);
+  line-height: 1.38;
+}
+
+/* The closing lines: the wrapper is always there, each line arrives on its own. */
+.pgrss__act--four {
+  display: flex;
+  opacity: 1;
+  flex-direction: column;
+  gap: clamp(0.6rem, 1.6svh, 1rem);
+  align-items: flex-start;
+}
+
+.pgrss__for {
+  max-width: 34rem;
+  margin: 0;
+  color: rgba(244, 228, 200, 0.78);
+  font-size: clamp(0.92rem, 1.2vw, 1.12rem);
+  line-height: 1.35;
+  opacity: 0;
+}
+
+.pgrss__close {
+  max-width: 54rem;
+  margin: 0;
+  font-size: clamp(1.7rem, min(3.2vw, 6svh), 3.2rem);
+  font-weight: 500;
+  letter-spacing: -0.045em;
+  line-height: 1;
+  opacity: 0;
+}
+
+.pgrss__cta-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.9rem 1.6rem;
+  opacity: 0;
+}
+
+.pgrss__note {
+  max-width: 19rem;
+  margin: 0;
+  color: rgba(244, 228, 200, 0.62);
+  font-size: 0.78rem;
+  line-height: 1.38;
+}
+
+/* ---- Phones: the lanes are narrower, the promises take turns ------------- */
+
+@media (max-width: 767px) {
+  .pgrss {
+    --pg-top: 6rem;
+    --pg-gate: 0.5;
+    --pg-stack: 1;
+  }
+
+  /* The word lies under the header on its own line; the copy starts below it. */
+  .pgrss__word {
+    right: auto;
+    left: var(--page-padding);
+    font-size: clamp(4.4rem, 25vw, 7rem);
+  }
+
+  .pgrss__copy {
+    top: calc(var(--pg-top) + clamp(4rem, 21vw, 6rem));
+    height: calc(var(--pg-gate) * 100% - var(--pg-top) - clamp(4rem, 21vw, 6rem) - 1.2rem);
+  }
+
+  .pgrss__eyebrow {
+    margin-bottom: 0.7rem;
+  }
+
+  .pgrss__lead {
+    font-size: 1.02rem;
+  }
+
+  .pgrss__title {
+    font-size: clamp(2.3rem, 11.5vw, 3.4rem);
+  }
+
+  .pgrss__sub {
+    margin-top: 0.6rem;
+    font-size: 0.88rem;
+  }
+
+  .pgrss__pledges {
+    grid-template-columns: 1fr;
+  }
+
+  .pgrss__pledges li {
+    grid-area: 1 / 1;
+  }
+
+  .pgrss__close {
+    font-size: clamp(1.55rem, 7.4vw, 2.1rem);
+  }
+
+  .pgrss__for {
+    font-size: 0.86rem;
+  }
+
+  .pgrss__note {
+    display: none;
+  }
+
+  .pgrss__group {
+    right: 0.1rem;
+    left: 0.1rem;
+    bottom: 0.9rem;
+  }
+
+  .pgrss__group b {
+    font-size: 1.35rem;
+  }
+
+  .pgrss__group > span {
+    font-size: 0.5rem;
+    letter-spacing: 0.02em;
+    text-transform: none;
+  }
+}
+
+/* ---- Without the pinned scene: everything on, in a column --------------- */
+
+.pgrss--static {
+  --pg-gate: 0.3;
+
+  position: relative;
+  inset: auto;
+  display: flex;
+  height: auto;
+  padding: 7rem var(--page-padding) 0;
+  overflow: hidden;
+  flex-direction: column;
+  visibility: visible;
+}
+
+.pgrss--static .pgrss__header,
+.pgrss--static ~ .pgrss-caps,
+.pgrss--static .pgrss__seal,
+.pgrss--static .pgrss__gate span {
+  display: none;
+}
+
+.pgrss--static .pgrss__word,
+.pgrss--static .pgrss__copy {
+  position: relative;
+  inset: auto;
+  height: auto;
+}
+
+.pgrss--static .pgrss__word {
+  order: 1;
+  margin-bottom: 2rem;
+  font-size: clamp(5rem, 22vw, 12rem);
+}
+
+.pgrss--static .pg-mask > span {
+  transform: none;
+}
+
+.pgrss--static .pgrss__copy {
+  order: 2;
+}
+
+.pgrss--static .pgrss__field {
+  order: 3;
+  position: relative;
+  inset: auto;
+  height: min(34rem, 70svh);
+  margin: 4rem calc(var(--page-padding) * -1) 0;
+}
+
+.pgrss--static .pgrss__eyebrow,
+.pgrss--static .pgrss__lane,
+.pgrss--static .pgrss__gate,
+.pgrss--static .pgrss__for,
+.pgrss--static .pgrss__close,
+.pgrss--static .pgrss__cta-row,
+.pgrss--static .pgrss__pledges li {
+  opacity: 1;
+}
+
+.pgrss--static .pgrss__acts {
+  display: flex;
+  flex-direction: column;
+  gap: 2.6rem;
+}
+
+.pgrss--static .pgrss__act,
+.pgrss--static .pgrss__pledges {
+  opacity: 1;
+}
+
+.pgrss--static .pgrss__act--four {
+  gap: 1.2rem;
+}
+
+@media (max-width: 767px) {
+  .pgrss--static .pgrss__pledges {
+    gap: 1.6rem;
+  }
+
+  .pgrss--static .pgrss__note {
+    display: block;
+  }
+}
+
+@media (scripting: none) {
+  .pgrss {
+    --pg-gate: 0.3;
+
+    position: relative;
+    inset: auto;
+    display: flex;
+    height: auto;
+    padding: 7rem var(--page-padding) 0;
+    overflow: hidden;
+    flex-direction: column;
+    visibility: visible;
+  }
+
+  .pgrss__header,
+  .pgrss ~ .pgrss-caps,
+  .pgrss__seal,
+  .pgrss__gate span {
+    display: none;
+  }
+
+  .pgrss__word,
+  .pgrss__copy {
+    position: relative;
+    inset: auto;
+    height: auto;
+  }
+
+  .pgrss__word {
+    order: 1;
+    margin-bottom: 2rem;
+    font-size: clamp(5rem, 22vw, 12rem);
+  }
+
+  .pg-mask > span {
+    transform: none;
+  }
+
+  .pgrss__copy {
+    order: 2;
+  }
+
+  .pgrss__field {
+    order: 3;
+    position: relative;
+    inset: auto;
+    height: min(34rem, 70svh);
+    margin: 4rem calc(var(--page-padding) * -1) 0;
+  }
+
+  .pgrss__eyebrow,
+  .pgrss__lane,
+  .pgrss__gate,
+  .pgrss__for,
+  .pgrss__close,
+  .pgrss__cta-row,
+  .pgrss__pledges li,
+  .pgrss__act,
+  .pgrss__pledges {
+    opacity: 1;
+  }
+
+  .pgrss__acts {
+    display: flex;
+    flex-direction: column;
+    gap: 2.6rem;
+  }
+
+  .pgrss__act--four {
+    gap: 1.2rem;
+  }
+}

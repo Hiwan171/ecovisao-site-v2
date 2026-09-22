@@ -5,6 +5,8 @@ type YuriProps = {
   staticMode: boolean;
   /** True once the terrain has covered enough of the screen for this to be the one on top. */
   open: boolean;
+  /** True once the section after this one has grown over it: nothing here can be reached. */
+  covered: boolean;
 };
 
 /**
@@ -44,13 +46,13 @@ function Contours() {
 }
 
 /**
- * Section 05, "Quem sou eu?". It rises over the paper of section 04 as terrain with
+ * Section 06, "Quem sou eu?". It rises over the green of section 05 as terrain with
  * contour lines ahead of it (the waves of the brand's documents), then holds the
  * screen: the founder's portrait blooms out of a disc with the lens's tick dial,
  * his credentials light one by one along a rail, and his mission is read out word
  * by word as the scroll goes. yuri-engine.ts moves all of it.
  */
-export function Yuri({ staticMode, open }: YuriProps) {
+export function Yuri({ staticMode, open, covered }: YuriProps) {
   return (
     <>
       <section
@@ -64,7 +66,7 @@ export function Yuri({ staticMode, open }: YuriProps) {
         </div>
 
         {/* The header again, cream on forest: it inverts along the terrain's edge. */}
-        <header className="site-header yuri__header" inert={!open}>
+        <header className="site-header yuri__header" inert={!open || covered}>
           <a className="brand" href="#top" aria-label="Ecovisão — início">
             <Image
               src="/brand/ecovisao-logo-on-dark.svg"
@@ -125,7 +127,7 @@ export function Yuri({ staticMode, open }: YuriProps) {
         <div className="yuri__copy">
           <p className="yuri__eyebrow" data-y="eyebrow">
             <span aria-hidden="true" />
-            05 <b>—</b> Quem <em>sou eu?</em>
+            06 <b>—</b> Quem <em>sou eu?</em>
           </p>
 
           <div className="yuri__acts">

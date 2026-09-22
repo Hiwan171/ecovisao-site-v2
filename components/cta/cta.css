@@ -1,0 +1,532 @@
+/*
+ * Section 08, the only place to get in touch. A frame-sized layer under the paper of
+ * section 07, at the top of the stage. It waits hidden and is uncovered when that paper
+ * gives way in rings from the node at its middle (proof-engine.ts); what shows is a dark
+ * ground with that node and those rings going on over it, and a dial of answers around
+ * the node. Inline styles from the engine override the resting look here, which is why
+ * so much starts at opacity 0.
+ */
+
+.cta {
+  /* Clear of the header: it ends at about 5rem, and the words need air under it. */
+  --ct-top: 8.2rem;
+  /* 1 = the answers sit in a grid under the words instead of around the node (phones). */
+  --ct-stack: 0;
+  --ct-cx: 72%;
+  --ct-cy: 57.5%;
+  --ct-reach: 1200;
+
+  position: absolute;
+  z-index: 27;
+  inset: auto 0 0;
+  height: min(100svh, 100%);
+  overflow: clip;
+  color: var(--cream);
+  background: linear-gradient(103deg, var(--forest-950) 0%, var(--forest-900) 58%, #0e301e 100%);
+  visibility: hidden;
+}
+
+.cta__bg {
+  position: absolute;
+  z-index: 0;
+  inset: 0;
+  pointer-events: none;
+  /* The fade to the footer's ground is the top layer, so nothing under it can leave a step. */
+  background:
+    linear-gradient(to bottom, transparent 52%, var(--forest-950) 97%),
+    radial-gradient(circle at var(--ct-cx) var(--ct-cy), rgba(63, 163, 96, 0.3), transparent 42%);
+}
+
+/* The same grain the other dark sections wear. */
+.cta::after {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  content: "";
+  opacity: 0.3;
+  mix-blend-mode: overlay;
+  background-image: var(--paper-grain);
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, #000 55%, transparent 96%);
+  mask-image: linear-gradient(to bottom, #000 55%, transparent 96%);
+}
+
+.cta__header {
+  z-index: 6;
+}
+
+/* ---- The rings, the node and the thread --------------------------------- */
+
+.cta__rings {
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  pointer-events: none;
+  /* The rings thin out towards the foot, so the footer picks them up without a seam. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
+}
+
+.cta__ring {
+  fill: none;
+  stroke: var(--sage);
+  stroke-width: 1;
+  opacity: 0;
+}
+
+.cta__dial-ring {
+  fill: none;
+  stroke: var(--sage);
+  stroke-width: 1;
+  opacity: 0;
+}
+
+/* Ticks just outside the dial, in the language of the lens's rim. */
+.cta__dial-ticks {
+  fill: none;
+  stroke: var(--orange);
+  stroke-dasharray: 1 11;
+  stroke-width: 6;
+  opacity: 0;
+}
+
+.cta__thread {
+  stroke: var(--orange);
+  stroke-width: 1.6;
+  opacity: 0;
+}
+
+.cta__halo {
+  fill: var(--orange);
+  opacity: 0;
+}
+
+.cta__node {
+  fill: var(--orange);
+}
+
+/* A ring born from the node each time an answer is chosen. */
+.cta__pulse {
+  fill: none;
+  stroke: var(--orange);
+  stroke-width: 1.4;
+  vector-effect: non-scaling-stroke;
+  opacity: 0;
+  transform: translate(var(--ct-cx), var(--ct-cy)) scale(0);
+  animation: ct-pulse 1.5s cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+@keyframes ct-pulse {
+  from {
+    opacity: 0.85;
+    transform: translate(var(--ct-cx), var(--ct-cy)) scale(8);
+  }
+
+  to {
+    opacity: 0;
+    transform: translate(var(--ct-cx), var(--ct-cy)) scale(var(--ct-reach));
+  }
+}
+
+/* ---- The words ---------------------------------------------------------- */
+
+.cta__copy {
+  position: absolute;
+  z-index: 3;
+  top: var(--ct-top);
+  bottom: 10.6rem;
+  left: var(--page-padding);
+  display: flex;
+  width: min(52rem, 58vw);
+  flex-direction: column;
+  justify-content: center;
+}
+
+.cta__eyebrow {
+  display: flex;
+  margin: 0 0 1.5rem;
+  align-items: center;
+  gap: 0.65rem;
+  color: rgba(244, 228, 200, 0.7);
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  opacity: 0;
+}
+
+.cta__eyebrow > span {
+  width: 0.42rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 0 0.27rem rgba(255, 160, 19, 0.18);
+}
+
+.cta__eyebrow b {
+  color: var(--orange);
+  font-size: 0.8em;
+}
+
+.cta__title {
+  display: flex;
+  margin: 0;
+  flex-direction: column;
+  font-size: clamp(2.2rem, min(4vw, 7.8svh), 4.9rem);
+  font-weight: 500;
+  letter-spacing: -0.05em;
+  line-height: 1;
+}
+
+.ct-mask {
+  display: block;
+  padding: 0 0.1em 0.14em 0;
+  overflow: hidden;
+}
+
+.ct-mask > span {
+  display: block;
+  transform: translateY(112%);
+}
+
+.cta__title em {
+  color: var(--lime);
+  font-family: var(--font-serif), Georgia, serif;
+  font-style: italic;
+  font-weight: 400;
+  letter-spacing: -0.03em;
+}
+
+.cta__lead {
+  max-width: 30rem;
+  margin: 1.5rem 0 0;
+  color: rgba(244, 228, 200, 0.78);
+  font-size: clamp(1rem, 1.3vw, 1.2rem);
+  line-height: 1.4;
+  opacity: 0;
+}
+
+.cta__creed {
+  max-width: 30rem;
+  margin: 1rem 0 0;
+  color: var(--sage);
+  font-family: var(--font-serif), Georgia, serif;
+  font-size: clamp(0.95rem, 1.15vw, 1.1rem);
+  font-style: italic;
+  line-height: 1.4;
+  opacity: 0;
+}
+
+/* On a short window the creed is what gives way: the title and the way to begin stay. */
+@media (max-height: 700px) and (min-width: 768px) {
+  .cta__creed {
+    display: none;
+  }
+
+  .cta__lead {
+    margin-top: 1.1rem;
+  }
+
+  .cta__eyebrow {
+    margin-bottom: 1.1rem;
+  }
+}
+
+/* ---- The dial ------------------------------------------------------------ */
+
+.cta__dial {
+  position: absolute;
+  z-index: 4;
+  inset: 0;
+  pointer-events: none;
+}
+
+.cta-pill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-flex;
+  padding: 0.74rem 1.2rem 0.74rem 1rem;
+  border: 1px solid rgba(244, 228, 200, 0.3);
+  border-radius: 999px;
+  align-items: center;
+  gap: 0.7rem;
+  background: rgba(7, 26, 16, 0.84);
+  color: var(--cream);
+  cursor: pointer;
+  font-size: 0.95rem;
+  letter-spacing: -0.01em;
+  opacity: 0;
+  pointer-events: auto;
+  white-space: nowrap;
+  will-change: transform;
+  transition:
+    border-color 0.3s ease,
+    background-color 0.3s ease;
+}
+
+.cta-pill i {
+  width: 0.62rem;
+  aspect-ratio: 1;
+  border: 1px solid rgba(244, 228, 200, 0.55);
+  border-radius: 50%;
+  transition:
+    background-color 0.3s ease,
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.cta-pill:hover {
+  border-color: rgba(244, 228, 200, 0.62);
+}
+
+.cta-pill[data-on="true"] {
+  border-color: var(--orange);
+  background: rgba(35, 45, 18, 0.9);
+}
+
+.cta-pill[data-on="true"] i {
+  border-color: var(--orange);
+  background: var(--orange);
+  box-shadow: 0 0 0 0.28rem rgba(255, 160, 19, 0.2);
+}
+
+/* ---- Ways to reach us ----------------------------------------------------- */
+
+.cta__reach {
+  position: absolute;
+  z-index: 5;
+  bottom: 2.3rem;
+  left: var(--page-padding);
+  display: grid;
+  gap: 1.1rem;
+  justify-items: start;
+  opacity: 0;
+}
+
+.cta__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.7rem 1.5rem;
+}
+
+.cta-copy {
+  display: inline-flex;
+  padding: 0.5rem 0.5rem 0.5rem 1.05rem;
+  border: 1px solid rgba(244, 228, 200, 0.26);
+  border-radius: 999px;
+  align-items: center;
+  gap: 0.9rem;
+  background: none;
+  color: var(--cream);
+  cursor: pointer;
+  font-size: 0.86rem;
+  letter-spacing: -0.005em;
+  transition: border-color 0.25s ease;
+}
+
+.cta-copy b {
+  padding: 0.38rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(244, 228, 200, 0.12);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition:
+    background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.cta-copy:hover {
+  border-color: rgba(244, 228, 200, 0.6);
+}
+
+.cta-copy:hover b {
+  background: var(--orange);
+  color: var(--forest-950);
+}
+
+.cta-link {
+  display: inline-flex;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid rgba(244, 228, 200, 0.32);
+  align-items: center;
+  gap: 0.5rem;
+  color: rgba(244, 228, 200, 0.86);
+  font-size: 0.86rem;
+  transition:
+    border-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.cta-link:hover {
+  border-color: var(--orange);
+  color: var(--cream);
+}
+
+.cta-link span {
+  color: var(--orange);
+}
+
+/* ---- Phones: the answers in a grid, under the words --------------------- */
+
+@media (max-width: 767px) {
+  .cta {
+    --ct-top: 6rem;
+    --ct-stack: 1;
+  }
+
+  .cta__copy {
+    right: var(--page-padding);
+    bottom: auto;
+    width: auto;
+    justify-content: flex-start;
+  }
+
+  .cta__title {
+    font-size: clamp(2.1rem, 9.8vw, 3rem);
+  }
+
+  .cta__lead {
+    margin-top: 1.1rem;
+    font-size: 0.95rem;
+  }
+
+  .cta__creed {
+    display: none;
+  }
+
+  .cta__dial {
+    inset: auto var(--page-padding) 11.4rem;
+    display: grid;
+    gap: 0.55rem;
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .cta-pill {
+    position: relative;
+    padding: 0.68rem 0.85rem 0.68rem 0.8rem;
+    font-size: 0.82rem;
+    line-height: 1.2;
+    white-space: normal;
+  }
+
+  .cta__reach {
+    right: var(--page-padding);
+    bottom: 1.4rem;
+  }
+
+  .cta__reach .button--primary {
+    width: 100%;
+  }
+
+  .cta-copy {
+    font-size: 0.78rem;
+  }
+}
+
+/* ---- Without the pinned scene: everything on, in a column --------------- */
+
+.cta--static {
+  position: relative;
+  inset: auto;
+  display: flex;
+  height: auto;
+  padding: 7rem var(--page-padding) 5rem;
+  overflow: hidden;
+  flex-direction: column;
+  gap: 2.4rem;
+  visibility: visible;
+}
+
+.cta--static .cta__header,
+.cta--static .cta__rings {
+  display: none;
+}
+
+.cta--static .cta__copy,
+.cta--static .cta__dial,
+.cta--static .cta__reach {
+  position: relative;
+  inset: auto;
+  width: auto;
+}
+
+.cta--static .cta__dial {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+}
+
+.cta--static .cta-pill {
+  position: relative;
+  opacity: 1;
+}
+
+.cta--static .cta__eyebrow,
+.cta--static .cta__lead,
+.cta--static .cta__creed,
+.cta--static .cta__reach {
+  opacity: 1;
+}
+
+.cta--static .ct-mask > span {
+  transform: none;
+}
+
+@media (scripting: none) {
+  .cta {
+    position: relative;
+    inset: auto;
+    display: flex;
+    height: auto;
+    padding: 7rem var(--page-padding) 5rem;
+    overflow: hidden;
+    flex-direction: column;
+    gap: 2.4rem;
+    visibility: visible;
+  }
+
+  .cta__header,
+  .cta__rings,
+  .cta__dial {
+    display: none;
+  }
+
+  .cta__copy,
+  .cta__reach {
+    position: relative;
+    inset: auto;
+    width: auto;
+  }
+
+  .cta__eyebrow,
+  .cta__lead,
+  .cta__creed,
+  .cta__reach {
+    opacity: 1;
+  }
+
+  .ct-mask > span {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cta__pulse {
+    animation: none;
+  }
+
+  .cta-pill,
+  .cta-pill i,
+  .cta-copy,
+  .cta-copy b,
+  .cta-link {
+    transition: none;
+  }
+}

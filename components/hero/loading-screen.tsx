@@ -1,7 +1,6 @@
 "use client";
 
 import Image from "next/image";
-import { useProgress } from "@react-three/drei";
 import { gsap } from "gsap";
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -9,6 +8,8 @@ type Point = { x: number; y: number };
 
 type LoadingScreenProps = {
   sceneReady: boolean;
+  /** How much of the scene's assets have arrived, 0..100 (0 until the scene starts loading). */
+  assetProgress: number;
   reducedMotion: boolean;
   /** Where the tree's crown is on screen, if the scene has said. */
   getCrown: () => Point | null;
@@ -45,11 +46,11 @@ const seg = (p: number, from: number, to: number) => clamp01((p - from) / (to - 
 
 export function LoadingScreen({
   sceneReady,
+  assetProgress,
   reducedMotion,
   getCrown,
   onComplete,
 }: LoadingScreenProps) {
-  const { progress: assetProgress } = useProgress();
   const [displayProgress, setDisplayProgress] = useState(0);
   const [exiting, setExiting] = useState(false);
   const [visible, setVisible] = useState(true);
@@ -348,6 +349,7 @@ export function LoadingScreen({
           width={180}
           height={68}
           loading="eager"
+          fetchPriority="high"
           unoptimized
         />
 

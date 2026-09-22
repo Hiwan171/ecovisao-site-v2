@@ -53,6 +53,7 @@ export function HeroExperience() {
   const heroRef = useRef<HTMLElement>(null);
   const reducedMotion = useReducedMotion();
   const [sceneReady, setSceneReady] = useState(false);
+  const [assetProgress, setAssetProgress] = useState(0);
   const [sceneUnavailable, setSceneUnavailable] = useState(false);
   const [introComplete, setIntroComplete] = useState(false);
   const [heroActive, setHeroActive] = useState(true);
@@ -149,6 +150,7 @@ export function HeroExperience() {
     <div ref={rootRef} className={`experience${introComplete ? " experience--ready" : ""}`}>
       <LoadingScreen
         sceneReady={sceneReady}
+        assetProgress={assetProgress}
         reducedMotion={reducedMotion}
         getCrown={getCrown}
         onComplete={handleIntroComplete}
@@ -183,6 +185,7 @@ export function HeroExperience() {
                   onReady={handleSceneReady}
                   onUnavailable={handleSceneUnavailable}
                   onFraming={setCrown}
+                  onProgress={setAssetProgress}
                 />
               </SceneErrorBoundary>
             )}

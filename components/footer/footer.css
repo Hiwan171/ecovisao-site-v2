@@ -1,0 +1,191 @@
+/*
+ * The footer. It follows the closing section in the normal flow, on the same dark
+ * ground, so the pin lets go of the page without a seam. Nothing here is pinned: it is
+ * read at the visitor's own pace, with one flourish (the wordmark rising as it enters)
+ * that only browsers with scroll-driven animations get, and that is the finished
+ * picture everywhere else.
+ */
+
+.ft {
+  position: relative;
+  z-index: 1;
+  padding: clamp(3.4rem, 8svh, 5.5rem) var(--page-padding) 1.6rem;
+  overflow: hidden;
+  background: var(--forest-950);
+  color: var(--cream);
+}
+
+/* The rings go on, quietly: the same language, at rest. */
+.ft__rings {
+  position: absolute;
+  top: -22rem;
+  right: -14rem;
+  width: min(60rem, 90vw);
+  aspect-ratio: 1;
+  pointer-events: none;
+}
+
+.ft__rings circle {
+  fill: none;
+  stroke: rgba(184, 237, 163, 0.1);
+  stroke-width: 1;
+}
+
+/* ---- Navigation ---------------------------------------------------------- */
+
+.ft__mid {
+  position: relative;
+  display: grid;
+  padding-top: 2rem;
+  border-top: 1px solid rgba(244, 228, 200, 0.16);
+  gap: 2.4rem 3rem;
+  grid-template-columns: minmax(0, 1.4fr) minmax(0, 0.8fr) auto;
+  align-items: start;
+}
+
+.ft__nav p,
+.ft__focus p {
+  margin: 0 0 1rem;
+  color: rgba(244, 228, 200, 0.7);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.ft__nav ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  gap: 0.2rem 2.5rem;
+  grid-template-columns: repeat(2, max-content);
+  list-style: none;
+}
+
+.ft__nav a {
+  position: relative;
+  display: inline-block;
+  padding: 0.35rem 0;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+
+.ft__focus ul {
+  display: grid;
+  margin: 0;
+  padding: 0;
+  gap: 0.3rem;
+  list-style: none;
+}
+
+.ft__focus li {
+  padding: 0.35rem 0;
+  color: rgba(244, 228, 200, 0.86);
+  font-size: 1rem;
+}
+
+.ft__up {
+  display: inline-flex;
+  min-height: 3.1rem;
+  padding: 0.25rem 0.38rem 0.25rem 1.2rem;
+  border: 1px solid rgba(244, 228, 200, 0.2);
+  border-radius: 999px;
+  align-items: center;
+  gap: 1rem;
+  font-size: 0.78rem;
+  transition: background-color 0.25s ease;
+}
+
+.ft__up i {
+  display: grid;
+  width: 2.36rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  place-items: center;
+  background: var(--cream);
+  color: var(--forest-950);
+  font-style: normal;
+  transition: transform 0.25s ease;
+}
+
+.ft__up:hover {
+  background: rgba(244, 228, 200, 0.06);
+}
+
+.ft__up:hover i {
+  transform: translateY(-3px);
+}
+
+/* ---- The name, and the last line ---------------------------------------- */
+
+.ft__brand {
+  position: relative;
+  margin: clamp(3rem, 8svh, 5.5rem) calc(var(--page-padding) * -0.4) 0;
+  overflow: hidden;
+}
+
+.ft__mark {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.ft__legal {
+  position: relative;
+  margin: 1.4rem 0 0;
+  color: rgba(244, 228, 200, 0.68);
+  font-size: 0.72rem;
+  letter-spacing: 0.04em;
+}
+
+/* Rises out of its own bottom edge as the footer enters: a browser's own scroll timeline. */
+@supports (animation-timeline: view()) {
+  .ft__mark {
+    animation: ft-rise linear both;
+    animation-range: entry 5% cover 46%;
+    animation-timeline: view();
+  }
+
+  @keyframes ft-rise {
+    from {
+      clip-path: inset(100% 0 0 0);
+      transform: translateY(14%);
+    }
+
+    to {
+      clip-path: inset(0);
+      transform: none;
+    }
+  }
+}
+
+@media (max-width: 900px) {
+  .ft__mid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .ft__nav {
+    grid-column: 1 / -1;
+  }
+
+  .ft__up {
+    grid-column: 1 / -1;
+    justify-self: start;
+  }
+}
+
+@media (max-width: 560px) {
+  .ft__nav ul {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ft__mark {
+    animation: none;
+  }
+
+  .ft__nav a::after {
+    transition: none;
+  }
+}

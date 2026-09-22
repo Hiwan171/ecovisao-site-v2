@@ -1,6 +1,6 @@
 "use client";
 
-import { useGLTF } from "@react-three/drei";
+import { useGLTF, useProgress } from "@react-three/drei";
 import { Canvas, useThree } from "@react-three/fiber";
 import { useEffect, useMemo } from "react";
 import * as THREE from "three";
@@ -13,6 +13,8 @@ type HeroSceneProps = {
   onReady: () => void;
   onUnavailable: () => void;
   onFraming: (crown: CrownPosition) => void;
+  /** How much of what the scene needs has arrived, 0..100. The loader shows it. */
+  onProgress: (progress: number) => void;
 };
 
 const TREE_PATH = "/models/ecovisao-tree.glb";
@@ -286,7 +288,22 @@ function RenderPolicy({ active }: Pick<HeroSceneProps, "active">) {
   return null;
 }
 
-export function HeroScene({ active, onReady, onUnavailable, onFraming }: HeroSceneProps) {
+/**
+ * Reports the loading progress of the scene's assets. It lives here, and not in the
+ * loader, so that three and drei stay out of the page's first script: the loader is on
+ * screen long before either is needed.
+ */
+function Progress({ onProgress }: Pick<HeroSceneProps, "onProgress">) {
+  const { progress } = useProgress();
+
+  useEffect(() => {
+    onProgress(progress);
+  }, [progress, onProgress]);
+
+  return null;
+}
+
+export function HeroScene({ active, onReady, onUnavailable, onFraming, onProgress }: HeroSceneProps) {
   return (
     <Canvas
       className="hero-scene"
@@ -329,6 +346,7 @@ export function HeroScene({ active, onReady, onUnavailable, onFraming }: HeroSce
       {/* Cool bounce so the shaded half reads forest green instead of black. */}
       <directionalLight color="#2f6b45" intensity={0.9} position={[-3, -2.5, 2]} />
       <pointLight color="#ffa013" intensity={0.5} position={[1.2, -1.6, 2.8]} distance={8} />
+      <Progress onProgress={onProgress} />
       <RenderPolicy active={active} />
       <Tree onReady={onReady} onFraming={onFraming} />
     </Canvas>

@@ -1,12 +1,14 @@
 import { HeroExperience } from "@/components/hero/hero-experience";
+import { Footer } from "@/components/footer/footer";
 import { SmoothScroll } from "@/components/smooth-scroll/smooth-scroll";
 
 export default function Home() {
   return (
-    <main>
-      <SmoothScroll>
+    <SmoothScroll>
+      <main>
         <HeroExperience />
-      </SmoothScroll>
-    </main>
+      </main>
+      <Footer />
+    </SmoothScroll>
   );
 }
