@@ -7,6 +7,10 @@ Nós enxergamos o todo."**
 A direção completa (conceito, estrutura de seções, paleta, metas de performance e
 pendências de conteúdo) está em [PLANEJAMENTO.md](PLANEJAMENTO.md).
 
+A avaliação da experiência implementada e as prioridades para elevar seu nível
+estão em [AUDITORIA-AWWWARDS.md](AUDITORIA-AWWWARDS.md), registrada em 22/09/2026.
+Consulte-a antes de propor novas mudanças visuais, de conteúdo ou navegação.
+
 ## Stack
 
 - **Next.js 16** (App Router, Turbopack)
@@ -30,12 +34,15 @@ npm run typecheck  # tsc --noEmit
 
 ## Estado atual
 
-O **hero**, a seção 02 (**Manifesto — "Nossa visão"**), a seção 03 (**"A Lente" —
-"Nossa abordagem"**), a seção 04 (**Soluções**, trilha horizontal) e a seção 05 (**Yuri Elias —
-"Quem sou eu?"**) estão implementados. Ainda não: prova social, CTA final e footer. A seção
-dedicada ao PGRSS, que o plano prevê, foi deixada de lado até o Yuri se posicionar; se ele
-pedir, entra como uma seção própria depois de Soluções (o cartão do PGRS já leva a etiqueta
-"PGRSS · Nosso diferencial").
+Em 22/09/2026, estão implementados o **hero**, **Manifesto — Nossa visão**,
+**Nossa abordagem — A Lente**, **Soluções** (trilha horizontal), **PGRSS**,
+**Yuri Elias**, **Clientes e parceiros**, **Contato** e **footer**, além de menu
+de seções e alternativa com movimento reduzido. Implementado não significa
+validado para entrega ou premiação: os achados e propostas estão na auditoria.
+
+As notas técnicas abaixo documentam etapas da construção e podem conter
+numeração, decisões e pendências históricas; confira a implementação atual e
+o registro da auditoria antes de usá-las como descrição do estado presente.
 
 ### O que o hero faz
 
