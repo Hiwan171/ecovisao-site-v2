@@ -572,8 +572,11 @@ export function createMethodEngine(
       manifestoLayer.style.clipPath = `circle(${num(irisRadius)}px at ${num(irisX)}px ${num(stageY)}px)`;
       irisClipped = true;
     } else if (irisClipped) {
-      // Back before the iris: the wipe is long done, so the clip goes back to none.
-      manifestoLayer.style.clipPath = "none";
+      // Back before the iris: hand the clip back rather than assuming the wipe is
+      // long done and hard-setting "none" — manifesto.render() already wrote the
+      // right value for wherever `progress` actually is this frame (it runs first
+      // in the same pass), which is not always "wipe finished": a jump can land
+      // back inside the wipe itself, not just at its edge.
       irisClipped = false;
     }
 

@@ -154,14 +154,17 @@
   opacity: 0;
 }
 
-/* The voices share one cell and take turns; the block is centred on the rings. */
+/* The voices share one cell and take turns; the block is centred on the rings.
+   Widened and set larger than the other sections' text column on purpose: this
+   is the one place a client's own words carry the page, not a diagram, so it
+   reads as the dominant event rather than half of a mirrored layout. */
 .pf-voices {
   position: absolute;
   z-index: 4;
   top: var(--pf-cy);
   left: var(--page-padding);
   display: grid;
-  width: min(34rem, 40vw);
+  width: min(42rem, 48vw);
   opacity: var(--pf-out, 1);
   transform: translateY(-50%);
   pointer-events: none;
@@ -180,12 +183,12 @@
 
 .pf-voice::before {
   display: block;
-  height: 0.62em;
+  height: 0.68em;
   margin-bottom: 0.5rem;
   color: var(--orange);
   content: "\201C";
   font-family: var(--font-serif), Georgia, serif;
-  font-size: clamp(3.4rem, 6svh, 5rem);
+  font-size: clamp(3.8rem, 7svh, 5.8rem);
   line-height: 0.9;
 }
 
@@ -195,10 +198,10 @@
 
 .pf-voice p {
   margin: 0;
-  font-size: clamp(1.05rem, min(1.6vw, 3svh), 1.55rem);
+  font-size: clamp(1.3rem, min(2.35vw, 4.2svh), 2.05rem);
   font-weight: 500;
-  letter-spacing: -0.025em;
-  line-height: 1.32;
+  letter-spacing: -0.03em;
+  line-height: 1.24;
 }
 
 .pf-voice p + p {
@@ -245,14 +248,14 @@
 
 .pf-ring {
   fill: none;
-  stroke: rgba(18, 73, 36, 0.32);
+  stroke: rgba(18, 73, 36, 0.22);
   stroke-dasharray: 1;
   stroke-dashoffset: 1;
   stroke-width: 1.1;
 }
 
 .pf-rings g:nth-of-type(3) .pf-ring {
-  stroke: rgba(18, 73, 36, 0.5);
+  stroke: rgba(18, 73, 36, 0.36);
 }
 
 /* A dial of ticks outside the outer ring, in the language of the lens's rim. */
@@ -413,7 +416,7 @@
 .pf-nav {
   position: absolute;
   z-index: 5;
-  bottom: 2.3rem;
+  bottom: 5.7rem;
   left: var(--page-padding);
   display: flex;
   align-items: center;
@@ -503,6 +506,66 @@
   color: var(--cream);
 }
 
+/* ---- The client record ---------------------------------------------------
+   A single legible row, the same height no matter how many clients there are:
+   it scrolls sideways instead of wrapping or shrinking past reading size —
+   unlike the chips on the rings, which is why this is the one place every
+   name stays visible on a phone too. Full-bleed on purpose, the one element
+   here that ignores the page margin, masked soft at both ends so it reads as
+   a deliberate band rather than text run off the edge. */
+
+.pf-trust {
+  position: absolute;
+  z-index: 5;
+  right: 0;
+  bottom: 1.5rem;
+  left: 0;
+  overflow: hidden;
+  opacity: var(--pf-out, 1);
+  -webkit-mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(to right, transparent, #000 8%, #000 92%, transparent);
+}
+
+.pf-trust__track {
+  display: flex;
+  width: max-content;
+  animation: pf-trust-scroll 38s linear infinite;
+}
+
+.pf-trust__set {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 2.2rem;
+  padding: 0 1.1rem;
+}
+
+.pf-trust__item {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.55rem;
+  color: rgba(7, 26, 16, 0.55);
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+.pf-trust__item img {
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  object-fit: cover;
+  opacity: 0.85;
+}
+
+@keyframes pf-trust-scroll {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
 /* ---- Phones: the rings sit under the words ------------------------------ */
 
 @media (max-width: 767px) {
@@ -558,6 +621,23 @@
     display: none;
   }
 
+  .pf-trust {
+    bottom: 1rem;
+  }
+
+  .pf-trust__set {
+    gap: 1.5rem;
+  }
+
+  .pf-trust__item {
+    font-size: 0.66rem;
+  }
+
+  .pf-trust__item img {
+    width: 1.25rem;
+    height: 1.25rem;
+  }
+
   /* The counter and the arrows ride the eyebrow's row: the rings own the bottom. */
   .pf-nav {
     top: 5.35rem;
@@ -603,7 +683,8 @@
 
 .proof--static .proof__copy,
 .proof--static .pf-voices,
-.proof--static .pf-chips {
+.proof--static .pf-chips,
+.proof--static .pf-trust {
   position: relative;
   inset: auto;
   width: auto;
@@ -627,6 +708,30 @@
   max-width: 44rem;
   flex-direction: column;
   gap: 2.4rem;
+}
+
+/* No scroll to drive a marquee here: one plain, wrapped row, the duplicated
+   loop-copy dropped since there is nothing for it to loop into. */
+.proof--static .pf-trust {
+  order: 4;
+  overflow: visible;
+  opacity: 1;
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+
+.proof--static .pf-trust__track {
+  width: auto;
+  animation: none;
+}
+
+.proof--static .pf-trust__set {
+  flex-wrap: wrap;
+  padding: 0;
+}
+
+.proof--static .pf-trust__set[aria-hidden="true"] {
+  display: none;
 }
 
 .proof--static .pf-chip {
@@ -680,7 +785,8 @@
 
   .proof__copy,
   .pf-voices,
-  .pf-chips {
+  .pf-chips,
+  .pf-trust {
     position: relative;
     inset: auto;
     width: auto;
@@ -704,6 +810,28 @@
     max-width: 44rem;
     flex-direction: column;
     gap: 2.4rem;
+  }
+
+  .pf-trust {
+    order: 4;
+    overflow: visible;
+    opacity: 1;
+    mask-image: none;
+    -webkit-mask-image: none;
+  }
+
+  .pf-trust__track {
+    width: auto;
+    animation: none;
+  }
+
+  .pf-trust__set {
+    flex-wrap: wrap;
+    padding: 0;
+  }
+
+  .pf-trust__set[aria-hidden="true"] {
+    display: none;
   }
 
   .pf-chip {
@@ -741,5 +869,21 @@
   .pf-chip__color,
   .pf-chip__name {
     transition: none;
+  }
+
+  /* Belt and suspenders: `staticMode` already skips the pinned scene (and this
+     marquee with it) whenever the OS asks for reduced motion, but a viewport
+     resize can land here before React catches up. */
+  .pf-trust__track {
+    width: auto;
+    animation: none;
+  }
+
+  .pf-trust__set {
+    flex-wrap: wrap;
+  }
+
+  .pf-trust__set[aria-hidden="true"] {
+    display: none;
   }
 }

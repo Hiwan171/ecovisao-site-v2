@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import type { ReactNode } from "react";
+import { useMagnetic } from "../cursor/use-magnetic";
+import { SectionMenu } from "../nav/section-menu";
 import { CROSS_LINKS, INNOVATION_LABEL, NODES, PILLS } from "./method-engine";
 import "./method.css";
 
@@ -70,6 +72,8 @@ function MapLayer({ variant }: { variant: "raw" | "lens" }) {
 }
 
 export function Method({ staticMode, active, opened, track, covered }: MethodProps) {
+  const darkHeaderCtaRef = useMagnetic<HTMLAnchorElement>();
+  const lensHeaderCtaRef = useMagnetic<HTMLAnchorElement>();
   return (
     <>
       <section
@@ -100,8 +104,13 @@ export function Method({ staticMode, active, opened, track, covered }: MethodPro
           </div>
 
           <nav className="site-header__nav" aria-label="Navegação principal">
-            <a href="#visao">Nossa visão</a>
-            <a className="header-cta" href="mailto:yuri.elias@ecovisaoconsultoria.com.br">
+            <SectionMenu />
+            <a
+              className="header-cta"
+              href="mailto:yuri.elias@ecovisaoconsultoria.com.br"
+              ref={darkHeaderCtaRef}
+              data-cursor="hover"
+            >
               Fale com a Ecovisão
               <span aria-hidden="true">↗</span>
             </a>
@@ -213,8 +222,13 @@ export function Method({ staticMode, active, opened, track, covered }: MethodPro
           </div>
 
           <nav className="site-header__nav" aria-label="Navegação principal">
-            <a href="#visao">Nossa visão</a>
-            <a className="header-cta" href="mailto:yuri.elias@ecovisaoconsultoria.com.br">
+            <SectionMenu />
+            <a
+              className="header-cta"
+              href="mailto:yuri.elias@ecovisaoconsultoria.com.br"
+              ref={lensHeaderCtaRef}
+              data-cursor="hover"
+            >
               Fale com a Ecovisão
               <span aria-hidden="true">↗</span>
             </a>

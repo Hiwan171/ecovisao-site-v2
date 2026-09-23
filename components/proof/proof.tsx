@@ -1,5 +1,7 @@
 import Image from "next/image";
 import type { CSSProperties, ReactNode } from "react";
+import { useMagnetic } from "../cursor/use-magnetic";
+import { SectionMenu } from "../nav/section-menu";
 import { CLIENT_NAMES, RINGS, VOICES } from "./clients";
 import "./proof.css";
 
@@ -27,6 +29,7 @@ function marked(text: string): ReactNode[] {
  * institutional document.
  */
 export function Proof({ staticMode, open, covered }: ProofProps) {
+  const headerCtaRef = useMagnetic<HTMLAnchorElement>();
   return (
     <>
       <section
@@ -57,8 +60,13 @@ export function Proof({ staticMode, open, covered }: ProofProps) {
           </div>
 
           <nav className="site-header__nav" aria-label="Navegação principal">
-            <a href="#visao">Nossa visão</a>
-            <a className="header-cta" href="mailto:yuri.elias@ecovisaoconsultoria.com.br">
+            <SectionMenu />
+            <a
+              className="header-cta"
+              href="mailto:yuri.elias@ecovisaoconsultoria.com.br"
+              ref={headerCtaRef}
+              data-cursor="hover"
+            >
               Fale com a Ecovisão
               <span aria-hidden="true">↗</span>
             </a>
@@ -122,7 +130,7 @@ export function Proof({ staticMode, open, covered }: ProofProps) {
         <div className="proof__copy">
           <p className="proof__eyebrow" data-pf="eyebrow">
             <span aria-hidden="true" />
-            07 <b>—</b> Prova social
+            07 <b>—</b> Clientes e resultados
           </p>
 
           <h2 id="proof-title" className="proof__title">
@@ -189,13 +197,34 @@ export function Proof({ staticMode, open, covered }: ProofProps) {
           </div>
         </div>
 
-        <p className="sr-only">
-          Clientes e parceiros:{" "}
-          {RINGS.flat()
-            .map((slug) => CLIENT_NAMES[slug])
-            .join("; ")}
-          .
-        </p>
+        {/* The same thirteen brands as the chips on the rings, but as a plain, always-
+            legible row: the rings are ornament, this is the record. Fixes what the
+            rings can't do on a phone, where a name next to a chip has no room. A
+            single-row marquee needs only the height of one line regardless of how
+            many clients there are — the duplicated second set is what makes the
+            loop seamless, and it is `aria-hidden` so the list is announced once. */}
+        <div className="pf-trust" data-pf="trust">
+          <div className="pf-trust__track">
+            {[0, 1].map((copy) => (
+              <div className="pf-trust__set" key={copy} aria-hidden={copy === 1 ? "true" : undefined}>
+                {RINGS.flat().map((slug) => (
+                  <span key={slug} className="pf-trust__item">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={`/images/clients/${slug}.webp`}
+                      alt=""
+                      width={36}
+                      height={36}
+                      loading="lazy"
+                      decoding="async"
+                    />
+                    <b>{CLIENT_NAMES[slug]}</b>
+                  </span>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
       </section>
 
       {/* The stain's edge, and the growth rings that ripple behind it. */}

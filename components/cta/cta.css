@@ -31,10 +31,12 @@
   z-index: 0;
   inset: 0;
   pointer-events: none;
-  /* The fade to the footer's ground is the top layer, so nothing under it can leave a step. */
+  /* The fade to the footer's ground is the top layer, so nothing under it can leave a
+     step. Under it, dawn: a warm glow low at the mark, a cooler one wider around it. */
   background:
     linear-gradient(to bottom, transparent 52%, var(--forest-950) 97%),
-    radial-gradient(circle at var(--ct-cx) var(--ct-cy), rgba(63, 163, 96, 0.3), transparent 42%);
+    radial-gradient(circle at var(--ct-cx) var(--ct-cy), rgba(255, 160, 19, 0.16), transparent 30%),
+    radial-gradient(circle at var(--ct-cx) var(--ct-cy), rgba(63, 163, 96, 0.28), transparent 46%);
 }
 
 /* The same grain the other dark sections wear. */
@@ -55,9 +57,9 @@
   z-index: 6;
 }
 
-/* ---- The rings, the node and the thread --------------------------------- */
+/* ---- The rings and the seed at their centre ------------------------------ */
 
-.cta__rings {
+.cta__scene {
   position: absolute;
   z-index: 1;
   inset: 0;
@@ -65,37 +67,41 @@
   height: 100%;
   overflow: visible;
   pointer-events: none;
-  /* The rings thin out towards the foot, so the footer picks them up without a seam. */
+  /* The ground thins out towards the foot, so the footer picks it up without a seam. */
   -webkit-mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
   mask-image: linear-gradient(to bottom, #000 62%, transparent 100%);
 }
 
-.cta__ring {
+/* A ring already grown: closed, settled, no motion of its own beyond the slow sway
+   the whole group gets. */
+.cta__ring-echo {
   fill: none;
   stroke: var(--sage);
   stroke-width: 1;
   opacity: 0;
+  /* The scene widens out of section 07's node as it arrives: the lines travel, their
+     weight does not, so it reads as rings growing and not as a picture zooming. */
+  vector-effect: non-scaling-stroke;
 }
 
-.cta__dial-ring {
-  fill: none;
-  stroke: var(--sage);
-  stroke-width: 1;
-  opacity: 0;
-}
-
-/* Ticks just outside the dial, in the language of the lens's rim. */
-.cta__dial-ticks {
+/* The newest ring: open, orange, the one line here that goes somewhere. Drawn by its
+   own stroke-dashoffset — `pathLength="1"` on the element lets that run in simple
+   0..1 fractions instead of a measured pixel length. */
+.cta__path {
   fill: none;
   stroke: var(--orange);
-  stroke-dasharray: 1 11;
-  stroke-width: 6;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-dasharray: 1;
   opacity: 0;
+  vector-effect: non-scaling-stroke;
+  filter: drop-shadow(0 0 0.5rem rgba(255, 160, 19, 0.25));
 }
 
-.cta__thread {
-  stroke: var(--orange);
-  stroke-width: 1.6;
+/* Where a brand stood on the ring: it rides back out of the node to its own slot and
+   then lets go. Sage, not orange — these are finished, the orange one is not. */
+.cta__trace {
+  fill: var(--sage);
   opacity: 0;
 }
 
@@ -104,8 +110,13 @@
   opacity: 0;
 }
 
-.cta__node {
-  fill: var(--orange);
+/* The brand's own mark, where every thread — and every brand section 07 drew in —
+   meets. Breathes gently with the halo behind it. */
+.cta__mark {
+  opacity: 0;
+  filter: drop-shadow(0 0 0.9rem rgba(255, 160, 19, 0.3));
+  transform-box: fill-box;
+  transform-origin: center;
 }
 
 /* A ring born from the node each time an answer is chosen. */
@@ -133,14 +144,17 @@
 
 /* ---- The words ---------------------------------------------------------- */
 
+/* Everything that is read or clicked lives in one column on the left — the words, the
+   button, the address — so the ring gets the other half of the screen to itself and
+   nothing ever has to be squeezed in under anything else. */
 .cta__copy {
   position: absolute;
   z-index: 3;
   top: var(--ct-top);
-  bottom: 10.6rem;
+  bottom: 3.4rem;
   left: var(--page-padding);
   display: flex;
-  width: min(52rem, 58vw);
+  width: min(42rem, 46vw);
   flex-direction: column;
   justify-content: center;
 }
@@ -175,7 +189,7 @@
   display: flex;
   margin: 0;
   flex-direction: column;
-  font-size: clamp(2.2rem, min(4vw, 7.8svh), 4.9rem);
+  font-size: clamp(2.4rem, min(4.7vw, 8.4svh), 5.6rem);
   font-weight: 500;
   letter-spacing: -0.05em;
   line-height: 1;
@@ -220,8 +234,154 @@
   opacity: 0;
 }
 
-/* On a short window the creed is what gives way: the title and the way to begin stay. */
-@media (max-height: 700px) and (min-width: 768px) {
+/* ---- The answers --------------------------------------------------------- */
+
+/* In the column, in reading order, between the words and the button — the same
+   place at every width. The ring keeps growing behind all of it, but nothing here
+   is placed on it: a plain choice among plain choices. */
+.cta__dial {
+  display: flex;
+  z-index: 4;
+  margin-top: 1.6rem;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.7rem;
+}
+
+/* The same chip shell method.css's own pills use (.method__pill) — one component,
+   not two sections each inventing their own control. */
+.cta-mark {
+  display: inline-flex;
+  padding: 0.55rem 0.95rem;
+  border: 1px solid rgba(244, 228, 200, 0.22);
+  border-radius: 999px;
+  align-items: center;
+  gap: 0.55rem;
+  background: rgba(244, 228, 200, 0.03);
+  color: rgba(244, 228, 200, 0.74);
+  cursor: pointer;
+  font-size: 0.85rem;
+  letter-spacing: -0.005em;
+  opacity: 0;
+  white-space: nowrap;
+  will-change: transform;
+  transition:
+    color 0.25s ease,
+    border-color 0.25s ease,
+    background-color 0.25s ease;
+}
+
+.cta-mark__icon {
+  width: 1rem;
+  height: 1rem;
+  flex: none;
+  color: rgba(244, 228, 200, 0.45);
+  transition: color 0.25s ease;
+}
+
+.cta-mark:hover {
+  border-color: rgba(244, 228, 200, 0.42);
+  color: var(--cream);
+}
+
+.cta-mark:hover .cta-mark__icon {
+  color: var(--sage);
+}
+
+.cta-mark[data-on="true"] {
+  border-color: var(--orange);
+  background: rgba(255, 160, 19, 0.1);
+  color: var(--cream);
+  font-weight: 500;
+}
+
+.cta-mark[data-on="true"] .cta-mark__icon {
+  color: var(--orange);
+}
+
+/* ---- Ways to reach us ----------------------------------------------------- */
+
+/* In the column with the words now, under them: one button, then one quiet line. */
+.cta__reach {
+  position: relative;
+  z-index: 5;
+  display: grid;
+  width: fit-content;
+  margin-top: 2.5rem;
+  gap: 1.15rem;
+  justify-items: start;
+  opacity: 0;
+}
+
+.cta__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1.15rem;
+}
+
+.cta-copy {
+  display: inline-flex;
+  padding: 0;
+  border: 0;
+  align-items: baseline;
+  gap: 0.7rem;
+  background: none;
+  color: rgba(244, 228, 200, 0.74);
+  cursor: pointer;
+  font-size: 0.85rem;
+  letter-spacing: -0.005em;
+  transition: color 0.25s ease;
+}
+
+.cta-copy span {
+  border-bottom: 1px solid rgba(244, 228, 200, 0.22);
+  padding-bottom: 0.15rem;
+  transition: border-color 0.25s ease;
+}
+
+.cta-copy b {
+  color: rgba(244, 228, 200, 0.45);
+  font-size: 0.66rem;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  transition: color 0.25s ease;
+}
+
+.cta-copy:hover {
+  color: var(--cream);
+}
+
+.cta-copy:hover span {
+  border-color: var(--orange);
+}
+
+.cta-copy:hover b {
+  color: var(--orange);
+}
+
+/* The platform marks, bare: a glyph each, no ring around it. */
+.cta-icon {
+  display: grid;
+  place-items: center;
+  color: rgba(244, 228, 200, 0.55);
+  transition: color 0.25s ease;
+}
+
+.cta-icon:hover {
+  color: var(--orange);
+}
+
+.cta-icon svg {
+  width: 1.15rem;
+  height: 1.15rem;
+}
+
+/* On a short window (a laptop, not a monitor) the ring needs the room a wide one
+   gives it for free: the creed gives way first, then everything sheds a little air.
+   These come after the dial/reach rules above them on purpose — same specificity,
+   so whichever is later in the file wins, and these are the ones meant to win here. */
+@media (max-height: 820px) and (min-width: 768px) {
   .cta__creed {
     display: none;
   }
@@ -233,147 +393,39 @@
   .cta__eyebrow {
     margin-bottom: 1.1rem;
   }
+
+  .cta__title {
+    font-size: clamp(2.2rem, min(3.9vw, 7svh), 4.4rem);
+  }
 }
 
-/* ---- The dial ------------------------------------------------------------ */
+@media (max-height: 760px) and (min-width: 768px) {
+  .cta__reach {
+    margin-top: 1.7rem;
+    gap: 0.85rem;
+  }
 
-.cta__dial {
-  position: absolute;
-  z-index: 4;
-  inset: 0;
-  pointer-events: none;
+  .cta-mark {
+    font-size: 0.88rem;
+  }
 }
 
-.cta-pill {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: inline-flex;
-  padding: 0.74rem 1.2rem 0.74rem 1rem;
-  border: 1px solid rgba(244, 228, 200, 0.3);
-  border-radius: 999px;
-  align-items: center;
-  gap: 0.7rem;
-  background: rgba(7, 26, 16, 0.84);
-  color: var(--cream);
-  cursor: pointer;
-  font-size: 0.95rem;
-  letter-spacing: -0.01em;
-  opacity: 0;
-  pointer-events: auto;
-  white-space: nowrap;
-  will-change: transform;
-  transition:
-    border-color 0.3s ease,
-    background-color 0.3s ease;
+/* A tablet held upright has all the height the ring wants and none of the width: the
+   column of words already takes half of it, leaving nothing for a ring wide enough to
+   carry four answers around it. `--ct-stack` tells the engine to stop placing them by
+   hand, and they fall back into the column's own reading order. */
+@media (min-width: 768px) and (max-width: 940px) {
+  .cta {
+    --ct-stack: 1;
+  }
+
+  .cta__copy {
+    width: auto;
+    right: var(--page-padding);
+  }
 }
 
-.cta-pill i {
-  width: 0.62rem;
-  aspect-ratio: 1;
-  border: 1px solid rgba(244, 228, 200, 0.55);
-  border-radius: 50%;
-  transition:
-    background-color 0.3s ease,
-    border-color 0.3s ease,
-    box-shadow 0.3s ease;
-}
-
-.cta-pill:hover {
-  border-color: rgba(244, 228, 200, 0.62);
-}
-
-.cta-pill[data-on="true"] {
-  border-color: var(--orange);
-  background: rgba(35, 45, 18, 0.9);
-}
-
-.cta-pill[data-on="true"] i {
-  border-color: var(--orange);
-  background: var(--orange);
-  box-shadow: 0 0 0 0.28rem rgba(255, 160, 19, 0.2);
-}
-
-/* ---- Ways to reach us ----------------------------------------------------- */
-
-.cta__reach {
-  position: absolute;
-  z-index: 5;
-  bottom: 2.3rem;
-  left: var(--page-padding);
-  display: grid;
-  gap: 1.1rem;
-  justify-items: start;
-  opacity: 0;
-}
-
-.cta__links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.7rem 1.5rem;
-}
-
-.cta-copy {
-  display: inline-flex;
-  padding: 0.5rem 0.5rem 0.5rem 1.05rem;
-  border: 1px solid rgba(244, 228, 200, 0.26);
-  border-radius: 999px;
-  align-items: center;
-  gap: 0.9rem;
-  background: none;
-  color: var(--cream);
-  cursor: pointer;
-  font-size: 0.86rem;
-  letter-spacing: -0.005em;
-  transition: border-color 0.25s ease;
-}
-
-.cta-copy b {
-  padding: 0.38rem 0.8rem;
-  border-radius: 999px;
-  background: rgba(244, 228, 200, 0.12);
-  font-size: 0.66rem;
-  font-weight: 600;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-  transition:
-    background-color 0.25s ease,
-    color 0.25s ease;
-}
-
-.cta-copy:hover {
-  border-color: rgba(244, 228, 200, 0.6);
-}
-
-.cta-copy:hover b {
-  background: var(--orange);
-  color: var(--forest-950);
-}
-
-.cta-link {
-  display: inline-flex;
-  padding: 0.3rem 0;
-  border-bottom: 1px solid rgba(244, 228, 200, 0.32);
-  align-items: center;
-  gap: 0.5rem;
-  color: rgba(244, 228, 200, 0.86);
-  font-size: 0.86rem;
-  transition:
-    border-color 0.25s ease,
-    color 0.25s ease;
-}
-
-.cta-link:hover {
-  border-color: var(--orange);
-  color: var(--cream);
-}
-
-.cta-link span {
-  color: var(--orange);
-}
-
-/* ---- Phones: the answers in a grid, under the words --------------------- */
+/* ---- Phones: the answers in the reading order, under the words ---------- */
 
 @media (max-width: 767px) {
   .cta {
@@ -402,23 +454,17 @@
   }
 
   .cta__dial {
-    inset: auto var(--page-padding) 11.4rem;
-    display: grid;
-    gap: 0.55rem;
-    grid-template-columns: 1fr 1fr;
+    gap: 0.45rem 0.55rem;
   }
 
-  .cta-pill {
-    position: relative;
-    padding: 0.68rem 0.85rem 0.68rem 0.8rem;
+  .cta-mark {
+    padding: 0.48rem 0.8rem;
     font-size: 0.82rem;
-    line-height: 1.2;
-    white-space: normal;
   }
 
   .cta__reach {
-    right: var(--page-padding);
-    bottom: 1.4rem;
+    width: 100%;
+    margin-top: 1.9rem;
   }
 
   .cta__reach .button--primary {
@@ -445,26 +491,18 @@
 }
 
 .cta--static .cta__header,
-.cta--static .cta__rings {
+.cta--static .cta__scene {
   display: none;
 }
 
 .cta--static .cta__copy,
-.cta--static .cta__dial,
 .cta--static .cta__reach {
   position: relative;
   inset: auto;
   width: auto;
 }
 
-.cta--static .cta__dial {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.7rem;
-}
-
-.cta--static .cta-pill {
-  position: relative;
+.cta--static .cta-mark {
   opacity: 1;
 }
 
@@ -493,7 +531,7 @@
   }
 
   .cta__header,
-  .cta__rings,
+  .cta__scene,
   .cta__dial {
     display: none;
   }
@@ -522,11 +560,12 @@
     animation: none;
   }
 
-  .cta-pill,
-  .cta-pill i,
+  .cta-mark,
+  .cta-mark__icon,
   .cta-copy,
+  .cta-copy span,
   .cta-copy b,
-  .cta-link {
+  .cta-icon {
     transition: none;
   }
 }

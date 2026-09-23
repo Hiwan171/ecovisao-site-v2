@@ -2,6 +2,8 @@
 
 import Image from "next/image";
 import { Fragment } from "react";
+import { useMagnetic } from "../cursor/use-magnetic";
+import { SectionMenu } from "../nav/section-menu";
 import { ECHO_RINGS, SATELLITES, SYSTEM } from "./manifesto-engine";
 import "./manifesto.css";
 
@@ -38,6 +40,7 @@ const STEPS = ["Eco", "Alinhamento", "Visão"];
  * StageSequence, because this section and the next one share one scroll.
  */
 export function Manifesto({ staticMode, covered, handoff }: ManifestoProps) {
+  const headerCtaRef = useMagnetic<HTMLAnchorElement>();
   return (
     <>
       {/* The leading edge of the wipe. It lives outside the clipped layer so the
@@ -75,8 +78,13 @@ export function Manifesto({ staticMode, covered, handoff }: ManifestoProps) {
             </div>
 
             <nav className="site-header__nav" aria-label="Navegação principal">
-              <a href="#visao">Nossa visão</a>
-              <a className="header-cta" href="mailto:yuri.elias@ecovisaoconsultoria.com.br">
+              <SectionMenu />
+              <a
+                className="header-cta"
+                href="mailto:yuri.elias@ecovisaoconsultoria.com.br"
+                ref={headerCtaRef}
+                data-cursor="hover"
+              >
                 Fale com a Ecovisão
                 <span aria-hidden="true">↗</span>
               </a>

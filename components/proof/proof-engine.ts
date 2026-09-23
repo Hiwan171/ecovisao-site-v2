@@ -154,19 +154,24 @@ export function createProofEngine(
     reach = farthest * 1.22 + 12;
 
     // The rings: a full turn of the trunk on wide screens, its top half on phones.
+    // Either way the client record runs along the very bottom edge, under them —
+    // room for it has to come off the ring's own radius, or a short window (a
+    // laptop, not a monitor) lets the two touch.
     const stacked = getComputedStyle(root!).getPropertyValue("--pf-stack").trim() === "1";
     if (stacked) {
+      const footClear = 56;
       centreX = width * 0.5;
       centreY = height * 0.755;
-      outer = Math.min(height * 0.19, width / 2 - 26);
+      outer = Math.min(height * 0.19, width / 2 - 26, height - footClear - centreY);
       spot = 270;
     } else {
+      const footClear = 84;
       centreX = width * 0.72;
       // Low enough that the top brands clear the header, high enough that the bottom ones
       // clear the edge, on the short windows of a laptop as much as on a tall monitor.
       centreY = height * 0.565;
       // A brand's own radius is about an eighth of the ring's: keep the last one on screen.
-      outer = Math.min(height * 0.35, (width - centreX - 10) / 1.125);
+      outer = Math.min(height * 0.35, (width - centreX - 10) / 1.125, height - footClear - centreY);
       spot = 180;
     }
     root!.style.setProperty("--pf-cx", `${centreX.toFixed(1)}px`);
@@ -282,6 +287,13 @@ export function createProofEngine(
     write(root!, "visibility", visible ? "visible" : "hidden");
     write(edge!, "visibility", visible && (grown < 1 || doors > 0) ? "visible" : "hidden");
 
+    // `reach` is calibrated to the farthest corner, but the origin sits near the
+    // words, off to one side: a radius that is still a modest fraction of `reach`
+    // already reaches every closer edge, so the raw (smoothstep) curve read as the
+    // screen flooding almost at once. Cubed, the radius stays legibly small for
+    // longer and only nears full screen cover as `grown` approaches 1.
+    const eased = grown * grown * grown;
+
     if (grown >= 1) {
       // The stain is over: its rings are not drawn any more, but the doors' edges may be.
       edgePaths.forEach((path) => write(path, "opacity", "0"));
@@ -292,15 +304,15 @@ export function createProofEngine(
       }
       if (doors <= BURST_AT) bursts.forEach((ring) => write(ring, "opacity", "0"));
     } else if (visible) {
-      const radius = reach * smooth(grown);
-      const amp = 0.17 * (1 - 0.72 * grown);
-      const phase = grown * 5 + now * 0.0006;
+      const radius = reach * eased;
+      const amp = 0.17 * (1 - 0.72 * eased);
+      const phase = eased * 5 + now * 0.0006;
 
       const shape = blob(radius, amp, phase);
       write(root!, "clip-path", asClip(shape));
 
       // The edge, one ring just outside it (over the dark), and three growth rings inside.
-      const fade = 1 - smooth(seg(grown, [0.7, 1]));
+      const fade = 1 - smooth(seg(eased, [0.7, 1]));
       const layout: [number, number, number, number][] = [
         [1, 1, 1, 0],
         [1.05, 0.9, 0.55 * fade, 0.6],
@@ -317,13 +329,22 @@ export function createProofEngine(
     }
 
     // The stain has covered the header: from here on it is the ink one that can be reached.
-    const isOpen = grown >= 0.8;
+    const isOpen = eased >= 0.8;
     if (isOpen !== opened) {
       opened = isOpen;
       onOpen(opened);
     }
 
-    if (!visible) return;
+    if (!visible) {
+      // A voice's own `visibility: visible` (below) overrides an ancestor's
+      // `hidden`, which is exactly the point while this section is on screen.
+      // Skipping the rest of this function when it is not must not leave one
+      // sitting at whatever it was last told — that is how a jump that lands
+      // outside this section's range, rather than scrolling into it, could
+      // still show one of its voices.
+      voices.forEach((voice) => write(voice, "visibility", "hidden"));
+      return;
+    }
 
     // 2. The stories. They sit in place from the start, waiting under the stain.
     const p = story;

@@ -301,10 +301,10 @@
 .method__lead {
   margin: 1.1rem 0 0;
   color: var(--cream);
-  font-size: clamp(1.35rem, 2vw, 2rem);
+  font-size: clamp(1.42rem, 2.1vw, 2.1rem);
   font-weight: 450;
-  letter-spacing: -0.035em;
-  line-height: 1.16;
+  letter-spacing: -0.038em;
+  line-height: 1.14;
   opacity: 0;
 }
 

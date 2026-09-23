@@ -296,10 +296,10 @@
 .manifesto__statement {
   margin: 0;
   max-width: 24em;
-  font-size: clamp(1.75rem, 2.75vw, 2.95rem);
+  font-size: clamp(1.85rem, 2.95vw, 3.15rem);
   font-weight: 450;
-  letter-spacing: -0.042em;
-  line-height: 1.13;
+  letter-spacing: -0.045em;
+  line-height: 1.1;
   opacity: 0;
 }
 

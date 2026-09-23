@@ -25,9 +25,9 @@ const LINES = [0, 16, 40, 74, 118] as const;
 
 /** Progress of each beat inside `story`. */
 const T = {
-  bloom: [0, 0.16],
+  bloom: [0, 0.1],
   portrait: [0.03, 0.28],
-  eyebrow: [0.05, 0.14],
+  eyebrow: [0.03, 0.1],
   name: [0.1, 0.26],
   role: [0.22, 0.32],
   rail: [0.26, 0.52],

@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { useMagnetic } from "../cursor/use-magnetic";
+import { SectionMenu } from "../nav/section-menu";
 import "./yuri.css";
 
 type YuriProps = {
@@ -53,6 +55,7 @@ function Contours() {
  * by word as the scroll goes. yuri-engine.ts moves all of it.
  */
 export function Yuri({ staticMode, open, covered }: YuriProps) {
+  const headerCtaRef = useMagnetic<HTMLAnchorElement>();
   return (
     <>
       <section
@@ -86,8 +89,13 @@ export function Yuri({ staticMode, open, covered }: YuriProps) {
           </div>
 
           <nav className="site-header__nav" aria-label="Navegação principal">
-            <a href="#visao">Nossa visão</a>
-            <a className="header-cta" href="mailto:yuri.elias@ecovisaoconsultoria.com.br">
+            <SectionMenu />
+            <a
+              className="header-cta"
+              href="mailto:yuri.elias@ecovisaoconsultoria.com.br"
+              ref={headerCtaRef}
+              data-cursor="hover"
+            >
               Fale com a Ecovisão
               <span aria-hidden="true">↗</span>
             </a>
@@ -119,7 +127,6 @@ export function Yuri({ staticMode, open, covered }: YuriProps) {
               priority={false}
               loading="eager"
               fetchPriority="low"
-              unoptimized
             />
           </div>
         </div>
