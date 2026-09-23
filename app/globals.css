@@ -65,6 +65,33 @@ button {
   background: var(--forest-950);
 }
 
+/* How far through the whole pinned sequence the visitor is: a hairline that
+   fills left to right, painted every frame from stage-sequence.tsx. Fixed to
+   the viewport, above everything, even the section headers. */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  right: 0;
+  left: 0;
+  z-index: 60;
+  height: 2px;
+  background: rgba(244, 228, 200, 0.1);
+  opacity: 0;
+  transition: opacity 500ms ease;
+}
+
+.scroll-progress--visible {
+  opacity: 1;
+}
+
+.scroll-progress__fill {
+  height: 100%;
+  width: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: var(--orange);
+}
+
 .hero {
   position: relative;
   min-height: max(47.5rem, 100svh);
@@ -442,7 +469,6 @@ button {
 
 .button--primary:hover {
   background: #fff0d4;
-  transform: translateY(-2px);
 }
 
 .button--primary:hover i {

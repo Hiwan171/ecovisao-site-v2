@@ -1,0 +1,42 @@
+/* Native cursor only goes away once the custom one is actually ready to draw —
+   never speculatively, or a slow mount would leave the visitor with no cursor
+   at all for a moment. */
+.cursor-active,
+.cursor-active * {
+  cursor: none !important;
+}
+
+.cursor {
+  position: fixed;
+  z-index: 120;
+  inset: 0;
+  overflow: visible;
+  pointer-events: none;
+}
+
+.cursor__dot,
+.cursor__ring {
+  position: absolute;
+  top: 0;
+  left: 0;
+  border-radius: 50%;
+}
+
+.cursor__dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  background: var(--orange);
+}
+
+.cursor__ring {
+  width: 2.6rem;
+  height: 2.6rem;
+  border: 1px solid rgba(255, 160, 19, 0.55);
+  transition: border-color 0.3s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cursor {
+    display: none;
+  }
+}

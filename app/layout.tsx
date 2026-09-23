@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Inter_Tight, Source_Serif_4 } from "next/font/google";
 import { CONTACT } from "@/components/contact";
+import { CustomCursor } from "@/components/cursor/custom-cursor";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -75,6 +76,7 @@ export default function RootLayout({
     >
       <body>
         {children}
+        <CustomCursor />
         <script
           type="application/ld+json"
           // Serialised data only, with `<` escaped so nothing in it can close the tag.
