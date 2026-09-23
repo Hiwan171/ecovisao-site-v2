@@ -60,19 +60,10 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
     // glide stutter.
     gsap.ticker.lagSmoothing(0);
 
-    // Brand links point at the top of the page; without native smooth scrolling
-    // they would jump.
-    const onClick = (event: MouseEvent) => {
-      const link = (event.target as Element | null)?.closest('a[href="#top"]');
-      if (!link) return;
-
-      event.preventDefault();
-      lenis.scrollTo(0, { duration: LINK_DURATION });
-    };
-    document.addEventListener("click", onClick);
+    // Brand links (`#top`) are handled in stage-sequence.tsx along with every other
+    // jump: that is where the jump veil and the pin's geometry both already live.
 
     return () => {
-      document.removeEventListener("click", onClick);
       gsap.ticker.remove(tick);
       gsap.ticker.lagSmoothing(500, 33);
       lenis.destroy();
@@ -83,16 +74,20 @@ export function SmoothScroll({ children }: { children: ReactNode }) {
   return <SmoothScrollContext value={lenisRef}>{children}</SmoothScrollContext>;
 }
 
-/** Scrolls to a pixel position, eased, falling back to the browser's own. */
+/**
+ * Scrolls to a pixel position, eased, falling back to the browser's own.
+ * `immediate` jumps straight there instead — for a scroll already hidden behind
+ * the jump veil, where an 1.7s glide would just be 1.7s of nothing seen.
+ */
 export function useScrollTo() {
   const lenisRef = useContext(SmoothScrollContext);
 
   return useCallback(
-    (top: number) => {
+    (top: number, options?: { immediate?: boolean }) => {
       const lenis = lenisRef?.current;
 
-      if (lenis) lenis.scrollTo(top, { duration: LINK_DURATION });
-      else window.scrollTo({ top, behavior: "smooth" });
+      if (lenis) lenis.scrollTo(top, options?.immediate ? { immediate: true } : { duration: LINK_DURATION });
+      else window.scrollTo({ top, behavior: options?.immediate ? "auto" : "smooth" });
     },
     [lenisRef],
   );

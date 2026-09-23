@@ -1,4 +1,6 @@
 import Image from "next/image";
+import { useMagnetic } from "../cursor/use-magnetic";
+import { SectionMenu } from "../nav/section-menu";
 import { GROUPS } from "./pgrss-field";
 import "./pgrss.css";
 
@@ -47,6 +49,8 @@ const SEAL_TICK_GAP = (2 * Math.PI * SEAL_TICK_RADIUS) / SEAL_TICKS;
  * pgrss-engine.ts moves all of it, pgrss-field.ts draws the particles.
  */
 export function Pgrss({ staticMode, open, covered }: PgrssProps) {
+  const headerCtaRef = useMagnetic<HTMLAnchorElement>();
+  const primaryCtaRef = useMagnetic<HTMLAnchorElement>();
   return (
     <>
       <section
@@ -78,8 +82,13 @@ export function Pgrss({ staticMode, open, covered }: PgrssProps) {
           </div>
 
           <nav className="site-header__nav" aria-label="Navegação principal">
-            <a href="#visao">Nossa visão</a>
-            <a className="header-cta" href="mailto:yuri.elias@ecovisaoconsultoria.com.br">
+            <SectionMenu />
+            <a
+              className="header-cta"
+              href="mailto:yuri.elias@ecovisaoconsultoria.com.br"
+              ref={headerCtaRef}
+              data-cursor="hover"
+            >
               Fale com a Ecovisão
               <span aria-hidden="true">↗</span>
             </a>
@@ -170,7 +179,8 @@ export function Pgrss({ staticMode, open, covered }: PgrssProps) {
                 Da mistura <em>à ordem.</em>
               </p>
               <p className="pgrss__sub">
-                Quatro grupos de resíduos, quatro caminhos. É o plano de gerenciamento que desenha cada um deles.
+                Os quatro grupos de resíduos com que atuamos, quatro caminhos. É o plano de gerenciamento que
+                desenha cada um deles.
               </p>
             </div>
 
@@ -195,19 +205,23 @@ export function Pgrss({ staticMode, open, covered }: PgrssProps) {
                 <a
                   className="button button--primary pgrss__cta"
                   href="mailto:yuri.elias@ecovisaoconsultoria.com.br?subject=Quero%20falar%20sobre%20PGRSS"
+                  ref={primaryCtaRef}
+                  data-cursor="hover"
                 >
                   <span>Falar sobre PGRSS</span>
                   <i aria-hidden="true">↗</i>
                 </a>
                 <p className="pgrss__note">
-                  Apoio técnico para a obtenção e a manutenção do Alvará Sanitário.
+                  <span className="pgrss__note-mark" aria-hidden="true" />
+                  O selo do seu Alvará Sanitário, sempre válido.
                 </p>
               </div>
             </div>
           </div>
 
           <p className="sr-only">
-            Os resíduos de serviços de saúde são segregados em quatro grupos:{" "}
+            A Ecovisão atua nos quatro grupos de resíduos de serviços de saúde previstos pela Resolução RDC
+            222/2018 da Anvisa — o grupo C, de rejeitos radioativos, está fora do escopo do serviço:{" "}
             {GROUPS.map((group) => `${group.code}, ${group.name.toLowerCase()}`).join("; ")}.
           </p>
         </div>

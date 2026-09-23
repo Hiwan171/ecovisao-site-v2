@@ -1,0 +1,159 @@
+/* ---- Trigger, in the header's own two colour ways ------------------------ */
+
+.sm {
+  position: relative;
+}
+
+.sm__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0;
+  background: none;
+  color: rgba(244, 228, 200, 0.72);
+  font-size: 0.78rem;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  appearance: none;
+}
+
+.sm__trigger:hover {
+  color: var(--cream);
+}
+
+.site-header--ink .sm__trigger:hover {
+  color: var(--forest-950);
+}
+
+.sm__trigger i {
+  width: 0.5rem;
+  aspect-ratio: 1;
+  border-right: 1px solid currentcolor;
+  border-bottom: 1px solid currentcolor;
+  opacity: 0.75;
+  transform: rotate(45deg) translateY(-15%);
+  transition: transform 220ms ease;
+}
+
+.sm--open .sm__trigger i {
+  transform: rotate(-135deg) translateY(10%);
+}
+
+/* The icon-only mobile form of the trigger: a dot grid, matching the header's own
+   dot vocabulary (the descriptor's separators, the eyebrow dots). Hidden on desktop. */
+.sm__trigger b {
+  display: none;
+}
+
+.site-header--ink .sm__trigger {
+  color: rgba(7, 26, 16, 0.72);
+}
+
+/* ---- Panel ----------------------------------------------------------------
+   Its own fixed surface (dark, cream ink) rather than following the header's
+   colour: a floating menu, not a page section, so it reads the same whichever
+   header it opens from. */
+
+.sm__panel {
+  position: absolute;
+  top: calc(100% + 0.9rem);
+  right: 0;
+  z-index: 20;
+  width: 15.5rem;
+  padding: 0.6rem;
+  border: 1px solid rgba(244, 228, 200, 0.14);
+  border-radius: 1.1rem;
+  background: rgba(7, 22, 14, 0.92);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  box-shadow: 0 1.4rem 3.2rem rgba(0, 0, 0, 0.38);
+  opacity: 0;
+  transform: translateY(-0.4rem);
+  transition: opacity 200ms ease, transform 200ms ease;
+}
+
+.sm__panel[hidden] {
+  display: block;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.sm--open .sm__panel {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.sm__panel ul {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.sm__panel a {
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 0.62rem 0.6rem;
+  border-radius: 0.7rem;
+  color: rgba(244, 228, 200, 0.86);
+  font-size: 0.86rem;
+  font-weight: 500;
+  transition: background-color 180ms ease, color 180ms ease;
+}
+
+.sm__panel a:hover,
+.sm__panel a:focus-visible {
+  background: rgba(244, 228, 200, 0.08);
+  color: var(--cream);
+}
+
+.sm__panel a i {
+  color: var(--orange);
+  font-size: 0.68rem;
+  font-style: normal;
+  font-weight: 650;
+  letter-spacing: 0.02em;
+  opacity: 0.85;
+}
+
+@media (max-width: 767px) {
+  .sm__trigger {
+    display: grid;
+    width: 2.75rem;
+    height: 2.75rem;
+    place-items: center;
+    border: 1px solid rgba(244, 228, 200, 0.28);
+    border-radius: 50%;
+  }
+
+  .site-header--ink .sm__trigger {
+    border-color: rgba(7, 26, 16, 0.2);
+  }
+
+  .sm__trigger span,
+  .sm__trigger > i {
+    display: none;
+  }
+
+  .sm__trigger b {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.2rem;
+  }
+
+  .sm__trigger b em {
+    width: 0.24rem;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    background: currentcolor;
+    font-style: normal;
+    opacity: 0.8;
+  }
+
+  .sm__panel {
+    top: calc(100% + 0.7rem);
+    right: -0.2rem;
+    width: 13.5rem;
+  }
+}

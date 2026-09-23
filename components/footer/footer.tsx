@@ -1,16 +1,6 @@
 import Image from "next/image";
+import { SECTION_LINKS } from "../nav/section-links";
 import "./footer.css";
-
-/** Sends the scroll to a section: they live inside the pin, so a plain hash would miss. */
-const LINKS = [
-  { label: "Nossa visão", href: "#visao" },
-  { label: "Abordagem", href: "#abordagem", goto: "abordagem" },
-  { label: "Soluções", href: "#solucoes", goto: "solucoes" },
-  { label: "PGRSS", href: "#pgrss", goto: "pgrss" },
-  { label: "Quem sou eu", href: "#yuri", goto: "quem-sou" },
-  { label: "Clientes e parceiros", href: "#prova", goto: "prova" },
-  { label: "Contato", href: "#contato", goto: "contato" },
-] as const;
 
 /**
  * The page's last word. It follows the closing section in the normal flow, on the same
@@ -30,9 +20,9 @@ export function Footer() {
         <nav className="ft__nav" aria-label="Seções do site">
           <p>Navegação</p>
           <ul>
-            {LINKS.map((link) => (
+            {SECTION_LINKS.map((link) => (
               <li key={link.label}>
-                <a href={link.href} data-goto={"goto" in link ? link.goto : undefined}>
+                <a href={link.href} data-goto={link.goto}>
                   {link.label}
                 </a>
               </li>

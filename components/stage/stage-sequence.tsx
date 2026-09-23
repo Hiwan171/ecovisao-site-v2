@@ -6,6 +6,7 @@ import { type RefObject, useEffect, useRef, useState } from "react";
 import type { CrownPosition } from "../hero/hero-scene";
 import { Cta } from "../cta/cta";
 import { createCtaEngine } from "../cta/cta-engine";
+import { createJumpVeil } from "../nav/jump-veil-engine";
 import { Manifesto } from "../manifesto/manifesto";
 import {
   ANCHOR_PROGRESS,
@@ -33,6 +34,12 @@ type StageSequenceProps = {
   covered: boolean;
   crown: CrownPosition;
   onCover: (covered: boolean) => void;
+  /** The fill of the fixed progress bar, painted directly: a per-frame value has
+   * no business going through React state. */
+  progressRef?: RefObject<HTMLDivElement | null>;
+  /** The jump veil's root: a distant `data-goto` jump plays it instead of scrubbing
+   * every beat in between. */
+  veilRef?: RefObject<HTMLDivElement | null>;
 };
 
 /**
@@ -49,6 +56,8 @@ export function StageSequence({
   covered,
   crown,
   onCover,
+  progressRef,
+  veilRef,
 }: StageSequenceProps) {
   const [methodActive, setMethodActive] = useState(false);
   const [opened, setOpened] = useState(false);
@@ -78,6 +87,7 @@ export function StageSequence({
     const yuri = createYuriEngine(stage, { onOpen: setYuriOpen });
     const proof = createProofEngine(stage, { onOpen: setProofOpen });
     const cta = createCtaEngine(stage, { onOpen: setCtaOpen });
+    const veil = veilRef?.current ? createJumpVeil(veilRef.current) : null;
     manifestoRef.current = manifesto;
     methodRef.current = method;
     manifesto.setCrown(crownRef.current);
@@ -91,6 +101,7 @@ export function StageSequence({
       yuri.destroy();
       proof.destroy();
       cta.destroy();
+      veil?.destroy();
       manifestoRef.current = null;
       methodRef.current = null;
     };
@@ -160,12 +171,23 @@ export function StageSequence({
     let running = false;
     let inside = false;
 
+    // The fixed progress bar's fill: a direct style write, like everything else
+    // here, since it changes every frame the picture does.
+    let lastProgress = -1;
+    const paintProgress = (value: number) => {
+      const bar = progressRef?.current;
+      if (!bar || Math.abs(value - lastProgress) < 0.0005) return;
+      lastProgress = value;
+      bar.style.transform = `scaleX(${value.toFixed(4)})`;
+    };
+
     const tick = (now: number) => {
       const dt = Math.min(0.05, Math.max(0.001, (now - last) / 1000));
       last = now;
       shown =
         Math.abs(target - shown) < 0.0002 ? target : shown + (target - shown) * (1 - Math.exp(-dt * 12));
       const settled = renderAll(shown, now, false);
+      paintProgress(shown);
 
       // Inside the pin the orbits keep swaying, so the loop keeps going. Outside
       // it, run only until the picture has caught up with where the scroll is.
@@ -185,6 +207,7 @@ export function StageSequence({
     const snap = (progress: number) => {
       target = shown = progress;
       renderAll(shown, performance.now(), true);
+      paintProgress(shown);
     };
 
     const trigger = ScrollTrigger.create({
@@ -236,14 +259,62 @@ export function StageSequence({
     };
     window.addEventListener("scroll", follow, { passive: true });
 
+    // A clicked link is a request to land on that section, not just to scrub past
+    // it: the address bar should read the same place, and a keyboard or screen
+    // reader visitor should land with the section's own heading, not wherever the
+    // pin last had focus. `replaceState` rather than `pushState` — the sections
+    // are beats of one scroll, not separate pages worth stacking in history.
+    const focusSection = (id: string) => {
+      const el = document.getElementById(id);
+      if (!el) return;
+      const hadTabIndex = el.hasAttribute("tabindex");
+      if (!hadTabIndex) el.setAttribute("tabindex", "-1");
+      el.focus({ preventScroll: true });
+      if (!hadTabIndex) el.addEventListener("blur", () => el.removeAttribute("tabindex"), { once: true });
+    };
+    const landOn = (hash: string) => {
+      history.replaceState(null, "", hash);
+      focusSection(hash.slice(1));
+    };
+
+    // A jump close by still glides, the way it always has. One far enough that
+    // gliding there would scrub every beat in between closes the jump veil over
+    // the screen first, from wherever was clicked, and only moves the scroll once
+    // hidden behind it.
+    const jumpTo = (target: number, origin: Element) => {
+      const distance = Math.abs(target - window.scrollY);
+      if (!veil || distance < window.innerHeight * 1.35) {
+        scrollTo(target);
+        return;
+      }
+
+      const box = origin.getBoundingClientRect();
+      veil.play({ x: box.left + box.width / 2, y: box.top + box.height / 2 }, () => {
+        scrollTo(target, { immediate: true });
+        // The native scroll event that would normally update `target` (and the
+        // easing that would carry `shown` to it) both take a beat neither the
+        // veil's hold nor the visitor should have to wait through: paint the
+        // destination's own frame outright, while still hidden behind the veil.
+        const span = trigger.end - trigger.start;
+        snap(span > 0 ? Math.min(1, Math.max(0, (target - trigger.start) / span)) : 0);
+      });
+    };
+
     // "Nossa visão" links: the sections live inside a pin, so a plain hash would
     // land before the reveal. Send them to where the Eco headline is fully in.
+    // Brand links (`#top`, the logo in every header) go to the very start of the pin.
     const onClick = (event: MouseEvent) => {
-      const link = (event.target as Element | null)?.closest('a[href="#visao"]');
+      const target = event.target as Element | null;
+      const topLink = target?.closest('a[href="#top"]');
+      const link = topLink ?? target?.closest('a[href="#visao"]');
       if (!link) return;
 
       event.preventDefault();
-      scrollTo(trigger.start + (trigger.end - trigger.start) * beats.manifestoAt(ANCHOR_PROGRESS));
+      const destination = topLink
+        ? trigger.start
+        : trigger.start + (trigger.end - trigger.start) * beats.manifestoAt(ANCHOR_PROGRESS);
+      landOn(topLink ? "#top" : "#visao");
+      jumpTo(destination, link);
     };
     document.addEventListener("click", onClick);
 
@@ -271,7 +342,9 @@ export function StageSequence({
 
       event.preventDefault();
       const name = link.dataset.goto;
-      scrollTo(trigger.start + (trigger.end - trigger.start) * beats.anchor(name as Anchor));
+      const hash = link.getAttribute("href");
+      if (hash) landOn(hash);
+      jumpTo(trigger.start + (trigger.end - trigger.start) * beats.anchor(name as Anchor), link);
     };
     document.addEventListener("click", onGoto);
 
@@ -292,7 +365,7 @@ export function StageSequence({
       trigger.kill(true);
       release();
     };
-  }, [ready, staticMode, stageRef, onCover, scrollTo]);
+  }, [ready, staticMode, stageRef, onCover, scrollTo, progressRef, veilRef]);
 
   return (
     <>

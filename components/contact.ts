@@ -1,8 +1,6 @@
 /**
  * How to reach Ecovisão, as the institutional document gives it (page 13): an e-mail and
- * an Instagram profile. There is no phone or WhatsApp number in it, so there is none
- * here: fill `whatsapp` (digits only, with country code, e.g. "5531999999999") and the
- * buttons that use it appear on their own.
+ * an Instagram profile, plus the WhatsApp number Yuri gave directly.
  *
  * The QR code on that page points to a third-party address, not to a contact, so it is
  * not carried over.
@@ -11,7 +9,7 @@ export const CONTACT = {
   email: "yuri.elias@ecovisaoconsultoria.com.br",
   instagram: "ecovisaoconsultoria",
   instagramUrl: "https://www.instagram.com/ecovisaoconsultoria/",
-  whatsapp: null as string | null,
+  whatsapp: "553174005718" as string | null,
 } as const;
 
 export const mailto = (subject: string, body?: string) =>
@@ -29,10 +27,10 @@ export const whatsappUrl = (text: string) =>
  * left).
  */
 export const INTERESTS = [
-  { id: "pgrss", label: "PGRSS e regularização", ask: "Falar sobre PGRSS" },
-  { id: "gestao", label: "Gestão e estratégia", ask: "Falar sobre gestão" },
-  { id: "pessoas", label: "Pessoas e desenvolvimento", ask: "Falar sobre pessoas" },
-  { id: "diagnostico", label: "Ainda não sei", ask: "Agendar um diagnóstico" },
+  { id: "pgrss", label: "PGRSS e regularização", short: "PGRSS", ask: "Falar sobre PGRSS" },
+  { id: "gestao", label: "Gestão e estratégia", short: "Gestão", ask: "Falar sobre gestão" },
+  { id: "pessoas", label: "Pessoas e desenvolvimento", short: "Pessoas", ask: "Falar sobre pessoas" },
+  { id: "diagnostico", label: "Ainda não sei", short: "Ainda não sei", ask: "Solicitar um diagnóstico" },
 ] as const;
 
 /** The e-mail that opens for the chosen interest: written for the visitor, who sends it. */

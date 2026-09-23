@@ -38,6 +38,15 @@ const EXIT = {
 /** Small on purpose: the "100" and the node's pulse should be seen before it leaves. */
 const EXIT_DELAY_MS = 190;
 const SKIP_FADE_MS = 320;
+/** The absolute longest the arrival ever holds the screen, scene or no scene.
+ * On a slow connection this stops being a safety net and becomes the common
+ * case — there is a static poster of the tree waiting under the scene for
+ * exactly that reason, so cutting the wait short here never leaves a gap. */
+const FALLBACK_MS = 2400;
+
+/** Set once the full journey has played, so a reload or a return later in the same
+ * tab gets straight to the content instead of the whole arrival again. */
+const INTRO_SEEN_KEY = "ecovisao:intro-seen";
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
 const clamp01 = (value: number) => clamp(value, 0, 1);
@@ -212,6 +221,11 @@ export function LoadingScreen({
 
       completedRef.current = true;
       setDisplayProgress(100);
+      try {
+        sessionStorage.setItem(INTRO_SEEN_KEY, "1");
+      } catch {
+        // Private mode or a locked-down browser: nothing to remember, plays again next time.
+      }
 
       if (fallbackTimerRef.current !== null) {
         window.clearTimeout(fallbackTimerRef.current);
@@ -230,7 +244,8 @@ export function LoadingScreen({
   useEffect(() => {
     startedAt.current = performance.now();
 
-    // The intro plays on every load. Only a reduced-motion preference skips it.
+    // Only a reduced-motion preference skips it outright; a return visit this same
+    // tab gets the quick fade instead of the full journey played once already.
     if (reducedMotion) {
       const skipTimer = window.setTimeout(() => {
         setVisible(false);
@@ -240,7 +255,22 @@ export function LoadingScreen({
       return () => window.clearTimeout(skipTimer);
     }
 
-    fallbackTimerRef.current = window.setTimeout(() => finishIntro(), 4500);
+    let seenAlready = false;
+    try {
+      seenAlready = sessionStorage.getItem(INTRO_SEEN_KEY) === "1";
+    } catch {
+      // No storage to read: treat it as a first visit.
+    }
+    if (seenAlready) {
+      // Deferred a tick: called straight from mount, dev's double-invoke of effects
+      // would fire this, then run this same effect's cleanup before the fade's own
+      // timer gets a turn — clearing it before it ever runs. A macrotask lands
+      // after that dance has settled either way, in dev or in production.
+      const skipTimer = window.setTimeout(() => finishIntro(0, "skip"), 0);
+      return () => window.clearTimeout(skipTimer);
+    }
+
+    fallbackTimerRef.current = window.setTimeout(() => finishIntro(), FALLBACK_MS);
 
     return () => {
       if (fallbackTimerRef.current !== null) {
@@ -282,7 +312,7 @@ export function LoadingScreen({
     const elapsed = performance.now() - startedAt.current;
     const minimumTimeReached = elapsed >= 1100;
     const readyToLeave = sceneReady && displayProgress >= 99 && minimumTimeReached;
-    const fallbackReached = elapsed >= 4500;
+    const fallbackReached = elapsed >= FALLBACK_MS;
 
     if (!readyToLeave && !fallbackReached) return;
 

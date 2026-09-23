@@ -284,19 +284,20 @@
 
 /* ---- The giant word ------------------------------------------------------ */
 
-/* Outlined, so what falls through it is what is in front: the waste is the subject. */
+/* Outlined with a soft fill, so what falls through it is still in front (the
+   waste is the subject) but the name itself reads at a glance. */
 .pgrss__word {
   position: absolute;
   z-index: 1;
   top: calc(var(--pg-top) - 0.4rem);
   right: var(--page-padding);
   margin: 0;
-  color: transparent;
+  color: rgba(184, 237, 163, 0.1);
   font-size: clamp(5rem, min(21svh, 15vw), 15rem);
   font-weight: 500;
   letter-spacing: -0.045em;
   line-height: 0.82;
-  -webkit-text-stroke: 1px rgba(184, 237, 163, 0.36);
+  -webkit-text-stroke: 1.6px rgba(184, 237, 163, 0.58);
   pointer-events: none;
   user-select: none;
   will-change: transform, opacity;
@@ -484,12 +485,26 @@
   opacity: 0;
 }
 
+/* A caption for the seal below, not a second copy of what it already says: the
+   little mark echoes the seal's own tick dial, so the two read as one pair. */
 .pgrss__note {
+  display: flex;
   max-width: 19rem;
   margin: 0;
+  align-items: center;
+  gap: 0.55rem;
   color: rgba(244, 228, 200, 0.62);
   font-size: 0.78rem;
   line-height: 1.38;
+}
+
+.pgrss__note-mark {
+  width: 0.42rem;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: var(--orange);
+  box-shadow: 0 0 0 0.27rem rgba(255, 160, 19, 0.18);
+  flex: none;
 }
 
 /* ---- Phones: the lanes are narrower, the promises take turns ------------- */
@@ -508,9 +523,11 @@
     font-size: clamp(4.4rem, 25vw, 7rem);
   }
 
+  /* The stroked letters paint a little past their own line box at this size, so the
+     copy needs real air below the word, not just the nominal box edge. */
   .pgrss__copy {
-    top: calc(var(--pg-top) + clamp(4rem, 21vw, 6rem));
-    height: calc(var(--pg-gate) * 100% - var(--pg-top) - clamp(4rem, 21vw, 6rem) - 1.2rem);
+    top: calc(var(--pg-top) + clamp(4rem, 21vw, 6rem) + 1.1rem);
+    height: calc(var(--pg-gate) * 100% - var(--pg-top) - clamp(4rem, 21vw, 6rem) - 2.3rem);
   }
 
   .pgrss__eyebrow {

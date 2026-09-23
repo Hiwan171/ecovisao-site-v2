@@ -35,7 +35,7 @@ export const SCREENS = { manifesto: 3.4, iris: 0.6, method: 3.4, open: 1 } as co
  * And after it. Both climbs start with a short hold, so the closing panel of the
  * section they cover can be read.
  */
-export const AFTER = { columns: 1.1, pgrss: 4.6, rise: 1.1, yuri: 2.8, bloom: 1.5, proof: 4.6, doors: 1.6, cta: 1.8 } as const;
+export const AFTER = { columns: 1.1, pgrss: 3.7, rise: 1.1, yuri: 2.8, bloom: 1.5, proof: 3.7, doors: 1.6, cta: 1.8 } as const;
 
 /** Used until the track has been measured. */
 export const DEFAULT_SOLUTIONS_SCREENS = 3;
